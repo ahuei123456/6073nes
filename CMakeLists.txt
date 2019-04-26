@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.1.0)
+set(CMAKE_BUILD_TYPE Debug)
 project (6073NES)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/lib/cmake)
@@ -6,7 +7,7 @@ find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIR})
 
 # executable
-file(GLOB SOURCES "src/*.cxx")
+file(GLOB SOURCES "src/*.cxx" "src/*.hpp")
 add_executable(nes ${SOURCES})
 
 # SDL2
