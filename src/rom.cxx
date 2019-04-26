@@ -5,13 +5,12 @@ ROM::ROM(const char* filename) {
     rom->open(filename, std::fstream::in | std::fstream::binary);
     
     if (!rom->is_open()) {
-        std::cout << "failed to open rom!" << std::endl;
-        exit(0);
+        throw std::invalid_argument("invalid filename");
     }
     
     this->read_header(rom);
     
-    rom.close();
+    rom->close();
     delete rom;
 }
 
@@ -24,20 +23,14 @@ void ROM::read_header(std::ifstream* rom) {
         throw bad_rom();
     }
     
-    std::cout << unsigned(header[4]) << " " << unsigned(header[5]) << std::endl;
-    std::cout << unsigned(header[9]) << std::endl;
-    
     prg_size = (header[4] + ((header[9] & 0x0f) << 8)) * PRG;
     chr_size = (header[5] + ((header[9] & 0xf0) << 4)) * CHR;
     
-    std::cout << prg_size << " " << chr_size << std::endl;
+    has_trainer = (header[6] & 0xb) >> 2;
     
-    trainer = (header[6] & 0xb) >> 2;
-    
-    if (trainer) {
-        std::cout << "trainer present" << std::endl;
-        for (int i = 0; i < 512; i++) {
-            rom->get();
+    if (has_trainer) {
+        for (int i = 0; i < TRAINER; i++) {
+            trainer[i] = rom->get();
         }
     }
     
@@ -47,7 +40,6 @@ void ROM::read_header(std::ifstream* rom) {
     }
     
     mapper = ((header[6] & 0x0f) >> 4) + (header[7] & 0x0f) + ((header[8] & 0xf) << 8);
-    std::cout << "mapper: " << mapper << std::endl;
     
     chr_rom.reserve(chr_size);
     for (int i = 0; i < chr_size; i++) {

@@ -21,9 +21,9 @@ private:
     
 public:
     Mem(std::shared_ptr<ROM> game);
-    uint64_t reset_vector();
-    uint32_t mem_read(uint64_t index);
-    uint32_t mem_read2(uint64_t index);
+    uint16_t reset_vector();
+    uint16_t mem_read(uint64_t index);
+    uint16_t mem_read2(uint64_t index);
     uint32_t mem_read3(uint64_t index);
     uint32_t mem_read4(uint64_t index);
 };

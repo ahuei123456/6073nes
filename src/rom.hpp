@@ -15,6 +15,7 @@
 #define INES_HEADER 16
 #define PRG 16384
 #define CHR 8192
+#define TRAINER 512
 
 class ROM {
 private:
@@ -25,7 +26,8 @@ private:
     uint32_t chr_size;
     uint32_t mapper;
     
-    bool trainer;
+    bool has_trainer;
+    std::array<uint8_t, TRAINER> trainer;
     void read_header(std::ifstream* rom);
     
 public:
