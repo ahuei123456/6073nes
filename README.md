@@ -2,21 +2,9 @@
 Cycle-accurate NES emulator
 
 ## How to run
-In the root directory, run the following commands.
-```
-cd build
-cmake ..
-make
-./nes [directory to rom]
-```
+In the root directory, run `test.sh`.
 
-To test out the example, try this.
-```
-cd build
-cmake ..
-make
-./nes ../roms/cpu_dummy_reads.nes
-```
+To test out another example, modify the command line argument passed to nes.
 
 ## To-do
 
