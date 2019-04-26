@@ -10,6 +10,9 @@ ROM::ROM(const char* filename) {
     }
     
     this->read_header(rom);
+    
+    rom.close();
+    delete rom;
 }
 
 void ROM::read_header(std::ifstream* rom) {
