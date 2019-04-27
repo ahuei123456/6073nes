@@ -56,7 +56,7 @@
 #define CMP_AX  0xDD
 #define CMP_AY  0xD9
 #define CMP_IX  0xC1
-#deinfe CMP_IY  0xD1
+#define CMP_IY  0xD1
 
 #define CPX_I   0xE0
 #define CPX_Z   0xE4
@@ -117,7 +117,7 @@
 #define LSR_AC  0x4A
 #define LSR_Z   0x46
 #define LSR_ZX  0x56
-#define LSR_AC  0x4E
+#define LSR_A   0x4E
 #define LSR_AX  0x5E
 
 #define NOP     0xEA
@@ -176,7 +176,7 @@
 #define STX_ZY  0x96
 #define STX_A   0x8E
 
-#define STY_A   0x84
+#define STY_Z   0x84
 #define STY_ZX  0x94
 #define STY_A   0x8C
 
