@@ -9,5 +9,11 @@ CPU::CPU(std::shared_ptr<Mem> memory) {
 void CPU::execute() {
     uint16_t opcode = memory->mem_read(reg_pc);
     
-    // do stuff here
+    switch (opcode) {
+        case ADC_I: {
+            // do something
+            break;
+        }
+        // add all the other opcodes
+    }
 }
