@@ -197,7 +197,7 @@ private:
     // https://wiki.nesdev.com/w/index.php/CPU_registers
     
     // accumulator
-    uint8_t reg_a;
+    uint8_t reg_ac;
     
     // indexes
     uint8_t reg_x;
@@ -212,9 +212,32 @@ private:
     // status register
     uint8_t reg_p;
     
+    void set_negative(bool value);
+    void set_overflow(bool value);
+    
+    void set_break(bool value);
+    void set_decimal(bool value);
+    void set_interrupt(bool value);
+    void set_zero(bool value);
+    void set_carry(bool value);
+    
 public:
     CPU(std::shared_ptr<Mem> memory);
     void execute();
+    
+    uint8_t get_ac();
+    uint8_t get_x();
+    uint8_t get_y();
+    uint16_t get_pc();
+    uint8_t get_s();
+    
+    bool get_negative();
+    bool get_overflow();
+    bool get_break();
+    bool get_decimal();
+    bool get_interrupt();
+    bool get_zero();
+    bool get_carry();
 };
 
 #endif
