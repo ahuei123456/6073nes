@@ -38,3 +38,11 @@ uint32_t Mem::mem_read3(uint64_t index) {
 uint32_t Mem::mem_read4(uint64_t index) {
     return mem_read2(index) + (mem_read2(index + 2) << 16);
 }
+
+void Mem::mem_write(uint64_t index, uint8_t value) {
+    if (index > 0x10000) {
+        throw std::out_of_range();
+    }
+    
+    mem[index] = value;
+}

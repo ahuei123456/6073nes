@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <array>
 #include <memory>
+#include <exception>
 #include "rom.hpp"
 
 #define NROM_128 16384
@@ -26,6 +27,8 @@ public:
     uint16_t mem_read2(uint64_t index);
     uint32_t mem_read3(uint64_t index);
     uint32_t mem_read4(uint64_t index);
+    
+    void mem_write(uint64_t index, uint8_t value);
 };
 
 #endif
