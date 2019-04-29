@@ -24,6 +24,128 @@ void CPU::execute() {
             set_interrupt(1);
             break;
         }
+
+        case BCC: {
+	    uint16_t operand = memory->mem_read(reg_pc + 1);
+            if (!get_carry()){
+		reg_pc += operand;
+	    }
+
+	    reg_pc += 2;
+	    break;
+	}
+
+        case BCS: {
+	    uint16_t operand = memory->mem_read(reg_pc + 1);
+	    if (get_carry()){
+		reg_pc += operand;
+	    }
+
+	    reg_pc += 2;
+	    break;
+
+	}
+
+	case BEQ: {
+	    uint16_t operand = memory->mem_read(reg_pc + 1);
+	    if (get_zero()) {
+		reg_pc += operand;
+	    }	
+	    reg_pc += 2;
+	    break;
+	}
+
+        case BNE: {
+	    uint16_t operand = memory->mem_read(reg_pc + 1);
+	    if (!get_zero()) {
+		reg_pc += operand;
+	    }
+
+	    reg_pc += 2;
+	    break;
+
+	}
+
+        case BVC: {
+	    uint16_t operand = memory->mem_read(reg_pc + 1);
+	    if (!get_overflow()) {
+		reg_pc += operand;
+	    }
+	    reg_pc += 2;
+	    break;
+	}
+
+        case BVS: {
+	    uint16_t operand = memory->mem_read(reg_pc + 1);
+	    if (get_overflow()) {
+		reg_pc += operand;
+	    }
+
+	    reg_pc += 2;
+	    break;
+        }
+
+        case BPL: {
+	    uint16_t operand = memory->mem_read(reg_pc + 1);
+	    if (!get_negative()) {
+		reg_pc += operand;
+	    }
+	    
+	    reg_pc += 2;
+	    break;
+	}
+
+        case BMI: {
+	    uint16_t operand = memory->mem_read(reg_pc + 1);
+	    if (get_negative()) {
+		reg_pc += operand;
+	    }
+
+	    reg_pc += 2;
+	    break;
+	}
+
+        case JMP_I: {
+            uint16_t operand = memory->mem_read(reg_pc + 1) + (memory->mem_read(reg_pc + 2) << 8);
+	    uint16_t nextMem = ((operand + 1) % 0xFF) + (operand >> 8);
+
+	    reg_pc = memory->mem_read(operand) + (memory->mem_read(nextMem) << 8);
+	
+	    break;
+	}
+
+	case JMP_A: {
+	    reg_pc = memory->mem_read(reg_pc + 1) + (memory->mem_read(reg_pc + 2) << 8);
+	    break;
+	}
+	
+        case JSR: {
+	    uint16_t operand = memory->mem_read(reg_pc + 1) + (memory->mem_read(reg_pc + 2) << 8) - 1;
+	    memory->mem_write(reg_s - 1, operand >> 8);
+	    memory->mem_write(reg_s - 2, operand % 0xFF);
+	    reg_s -= 2;
+	    reg_pc = operand + 1;	    
+  
+	    break;
+	}
+
+        case RTI: {
+	    reg_p = memory->mem_read(reg_s) + (memory->mem_read(reg_s - 1) << 8);
+	    reg_pc = memory->mem_read(reg_s - 2) + (memory->mem_read(reg_s - 3) << 8);
+	    reg_s += 4;    
+
+	    break;
+	}
+
+	case RTS: {
+            uint16_t operand = memory->mem_read(reg_s) + (memory->mem_read(reg_s + 1) << 8);
+	    reg_s += 2;
+	    reg_pc = operand + 1;
+
+	    break;
+	}
+
+	
         
         // add all the other opcodes
     }
