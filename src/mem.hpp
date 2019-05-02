@@ -8,6 +8,7 @@
 #include <exception>
 #include "rom.hpp"
 #include "cpu.hpp"
+#include "ppu.hpp"
 
 #define NROM_128        16384
 #define NROM_256        32768
@@ -50,7 +51,8 @@
 class ROM;
 
 class Mem {
-private: 
+private:
+    PPU ppu;    
     std::array<uint8_t, CPU_MEM_SIZE> cpu_mem;
     std::array<uint8_t, PPU_MEM_SIZE> ppu_mem;
     
