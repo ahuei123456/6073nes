@@ -35,7 +35,7 @@ void CPU::execute() {
             uint8_t operand = mem_read(address);
             lda(operand);
             break;
-        }
+        } 
         case LDA_AX: {
             uint16_t address = pc_read2();
             uint16_t shift = address + reg_x;
