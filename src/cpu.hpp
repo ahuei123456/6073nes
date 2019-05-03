@@ -221,6 +221,21 @@ private:
     void set_zero(bool value);
     void set_carry(bool value);
     
+    // cycle stuff
+    uint8_t cycles;
+    
+    // clocked events
+    uint8_t mem_read(uint64_t index);
+    uint16_t mem_read2(uint64_t index);
+    void mem_write(uint64_t index, uint8_t value);
+    
+    uint8_t pc_read();
+    uint16_t pc_read2();
+    void push(uint8_t value);
+    void push16(uint16_t value);
+    uint8_t pop();
+    uint16_t pop16();
+    
 public:
     CPU(std::shared_ptr<Mem> memory);
     void execute();
