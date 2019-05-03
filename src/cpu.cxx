@@ -51,19 +51,19 @@ void CPU::execute() {
         }
         case LDA_AY: {
             uint16_t operand = pc_read2();
-            reg_ac = (uint8_t) memory->mem_read(operand + reg_y);
+            reg_ac = (uint8_t) mem_read(operand + reg_y);
             lda(operand);
             break;
         }
         case LDA_IX: {
             uint16_t operand = pc_read();
-            reg_ac = (uint8_t) memory->mem_read(memory->mem_read2(operand + reg_x));
+            reg_ac = (uint8_t) mem_read(mem_read2(operand + reg_x));
             lda(operand);
             break;
         }
 	case LDA_IY: {
             uint16_t operand = pc_read();
-            reg_ac = (uint8_t) memory->mem_read((memory->mem_read2(operand) + reg_y);
+            reg_ac = (uint8_t)mem_read(mem_read2(operand) + reg_y);
             lda(operand);
             break;
         }
@@ -75,25 +75,25 @@ void CPU::execute() {
         }
 	case LDX_Z: {
             uint16_t operand = pc_read();
-            reg_x = (uint8_t) memory->mem_read(operand);
+            reg_x = (uint8_t) mem_read(operand);
             ldx(operand);
             break;
         }
 	case LDX_ZY: {
             uint16_t operand = pc_read();
-            reg_x = (uint8_t) memory->mem_read(operand + reg_y);
+            reg_x = (uint8_t) mem_read(operand + reg_y);
             ldx(operand);
             break;
         }
 	case LDX_A: {
             uint16_t operand = pc_read2();
-            reg_x = (uint8_t) memory->mem_read(operand);
+            reg_x = (uint8_t) mem_read(operand);
             ldx(operand);
 	    break;
 	}
 	case LDX_AY: {
             uint16_t operand = pc_read2();
-            reg_x = (uint8_t) memory->mem_read(operand + reg_y);
+            reg_x = (uint8_t) mem_read(operand + reg_y);
             ldx(operand);
             break;
         }
@@ -105,91 +105,91 @@ void CPU::execute() {
         }
 	case LDY_Z: {
             uint16_t operand = pc_read();
-            reg_y = (uint8_t) memory->mem_read(operand);
+            reg_y = (uint8_t)mem_read(operand);
             ldy(operand);
             break;
         }
 	case LDY_ZX: {
             uint16_t operand = pc_read();
-            reg_y = (uint8_t) memory->mem_read(operand + reg_x);
+            reg_y = (uint8_t) mem_read(operand + reg_x);
             ldy(operand);
             break;
         }
 	case LDY_A: {
             uint16_t operand = pc_read();
-            reg_y = (uint8_t) memory->mem_read(operand);
+            reg_y = (uint8_t) mem_read(operand);
             ldy(operand);
 	    break;
 	}
 	case LDY_AX: {
             uint16_t operand =pc_read2();
-            reg_y = (uint8_t) memory->mem_read(operand + reg_x);
+            reg_y = (uint8_t) mem_read(operand + reg_x);
             ldy(operand);
             break;
         }
 	case STA_Z: {
             uint16_t operand = pc_read();
-            memory->mem_write(operand, reg_ac);
+            mem_write(operand, reg_ac);
 	    break;
 	}
 	case STA_ZX: {
             uint16_t operand = pc_read();
-            memory->mem_write(operand+reg_x, reg_ac);
+            mem_write(operand+reg_x, reg_ac);
 	    break;
 	}
 	case STA_A: {
             uint16_t operand = pc_read();
-            memory->mem_write(operand, reg_ac);
+            mem_write(operand, reg_ac);
 	    break;
 	}
 	case STA_AX: {
             uint16_t operand = pc_read2();
-            memory->mem_write(operand+reg_x, reg_ac);
+            mem_write(operand+reg_x, reg_ac);
 	    break;
 	}
 	case STA_AY: {
             uint16_t operand = pc_read2();
-            memory->mem_write(operand+reg_y, reg_ac);
+            mem_write(operand+reg_y, reg_ac);
 	    break;
 	}
 	case STA_IX: {
             uint16_t operand = pc_read();
-            memory->mem_write(memory->mem_read2(operand+reg_x), reg_ac);
+            mem_write(mem_read2(operand+reg_x), reg_ac);
 	    break;
 	}
 	case STA_IY: {
             uint16_t operand = pc_read();
-            memory->mem_write(memory->mem_read2(operand) + reg_y, reg_ac);
+            mem_write(mem_read2(operand) + reg_y, reg_ac);
 	    break;
 	}
 	case STX_Z: {
             uint16_t operand =pc_read();
-            memory->mem_write(operand, reg_x);
+            mem_write(operand, reg_x);
 	    break;
 	}
 	case STX_ZY: {
             uint16_t operand = pc_read();
-            memory->mem_write(operand+reg_y, reg_x);
+            mem_write(operand+reg_y, reg_x);
 	    break;
 	}
 	case STX_A: {
             uint16_t operand = pc_read2();
-            memory->mem_write(operand, reg_x);
+            mem_write(operand, reg_x);
 	    break;
 	}
 	case STY_Z: {
             uint16_t operand = pc_read();
-            memory->mem_write(operand, reg_y);
+            mem_write(operand, reg_y);
 	    break;
 	}
 	case STY_ZX: {
             uint16_t operand = pc_read();
-            memory->mem_write(operand+reg_x, reg_y);
+            mem_write(operand+reg_x, reg_y);
 	    break;
 	}
 	case STY_A: {
             uint16_t operand = pc_read();
-            memory->mem_write(operand, reg_y);
+            mem_write(operand, reg_y);
 	    break;
 	}
 	case TAX: {
@@ -306,8 +306,8 @@ void CPU::execute() {
 	}
 	case DEC_Z: {
             uint16_t operand = pc_read();
-	    uint8_t result = (uint8_t) memory->mem_read(operand) - 1;
-            memory->write(operand, result);
+	    uint8_t result = (uint8_t) mem_read(operand) - 1;
+            write(operand, result);
             if(result & 0x80 == 0)
 		set_negative(false);
     	    else
@@ -320,8 +320,8 @@ void CPU::execute() {
         }
 	case DEC_ZX: {
             uint16_t operand = pc_read();
-	    uint8_t result = (uint8_t) memory->mem_read(operand + reg_x) - 1;
-            memory->write(operand + reg_x, result);
+	    uint8_t result = (uint8_t) mem_read(operand + reg_x) - 1;
+            write(operand + reg_x, result);
             if(result & 0x80 == 0)
 		set_negative(false);
     	    else
@@ -334,8 +334,8 @@ void CPU::execute() {
         }
 	case DEC_A: {
             uint16_t operand = pc_read();
-	    uint8_t result = (uint8_t) memory->mem_read(operand) - 1;
-            memory->write(operand, result);
+	    uint8_t result = (uint8_t) mem_read(operand) - 1;
+            write(operand, result);
             if(result & 0x80 == 0)
 		set_negative(false);
     	    else
@@ -348,8 +348,8 @@ void CPU::execute() {
 	}
 	case DEC_AX: {
             uint16_t operand = pc_read();
-	    uint8_t result = (uint8_t) memory->mem_read(operand + reg_x) - 1;
-            memory->write(operand + reg_x, result);
+	    uint8_t result = (uint8_t) mem_read(operand + reg_x) - 1;
+            write(operand + reg_x, result);
             if(result & 0x80 == 0)
 		set_negative(false);
     	    else
@@ -362,8 +362,8 @@ void CPU::execute() {
         }
 	case INC_Z: {
             uint16_t operand =pc_read();
-	    uint8_t result = (uint8_t) memory->mem_read(operand) + 1;
-            memory->write(operand, result);
+	    uint8_t result = (uint8_t) mem_read(operand) + 1;
+            write(operand, result);
             if(result & 0x80 == 0)
 		set_negative(false);
     	    else
@@ -376,8 +376,8 @@ void CPU::execute() {
         }
 	case INC_ZX: {
             uint16_t operand = pc_read();
-	    uint8_t result = (uint8_t) memory->mem_read(operand + reg_x) + 1;
-            memory->write(operand + reg_x, result);
+	    uint8_t result = (uint8_t) mem_read(operand + reg_x) + 1;
+            write(operand + reg_x, result);
             if(result & 0x80 == 0)
 		set_negative(false);
     	    else
@@ -390,8 +390,8 @@ void CPU::execute() {
         }
 	case INC_A: {
             uint16_t operand = pc_read();
-	    uint8_t result = (uint8_t) memory->mem_read(operand) + 1;
-            memory->write(operand, result);
+	    uint8_t result = (uint8_t)mem_read(operand) + 1;
+            write(operand, result);
             if(result & 0x80 == 0)
 		set_negative(false);
     	    else
@@ -404,8 +404,8 @@ void CPU::execute() {
 	}
 	case INC_AX: {
             uint16_t operand = pc_read2();
-	    uint8_t result = (uint8_t) memory->mem_read(operand + reg_x) + 1;
-            memory->write(operand + reg_x, result);
+	    uint8_t result = (uint8_t) mem_read(operand + reg_x) + 1;
+            write(operand + reg_x, result);
             if(result & 0x80 == 0)
 		set_negative(false);
     	    else
@@ -435,7 +435,7 @@ void CPU::execute() {
 	}
 	case SBC_Z: {
             uint16_t operand = pc_read();
-	    uint8_t src = (uint8_t) memory->mem_read(operand);
+	    uint8_t src = (uint8_t) mem_read(operand);
 	    uint16_t temp = reg_ac - src - (get_carry() ? 0 : 1);
 	    set_negative(temp & 0x80 != 0);
 	    set_zero(temp & 0xff == 0);
@@ -452,7 +452,7 @@ void CPU::execute() {
 	}
 	case SBC_ZX: {
             uint16_t operand = pc_read();
-	    uint8_t src = (uint8_t) memory->mem_read(operand + reg_x);
+	    uint8_t src = (uint8_t) mem_read(operand + reg_x);
 	    uint16_t temp = reg_ac - src - (get_carry() ? 0 : 1);
 	    set_negative(temp & 0x80 != 0);
 	    set_zero(temp & 0xff == 0);
@@ -469,7 +469,7 @@ void CPU::execute() {
 	}
 	case SBC_A: {
             uint16_t operand = pc_read2();
-	    uint8_t src = (uint8_t) memory->mem_read(operand);
+	    uint8_t src = (uint8_t) mem_read(operand);
 	    uint16_t temp = reg_ac - src - (get_carry() ? 0 : 1);
 	    set_negative(temp & 0x80 != 0);
 	    set_zero(temp & 0xff == 0);
@@ -486,7 +486,7 @@ void CPU::execute() {
 	}
 	case SBC_AX: {
             uint16_t operand = pc_read2();
-	    uint8_t src = (uint8_t) memory->mem_read(operand + reg_x);
+	    uint8_t src = (uint8_t) mem_read(operand + reg_x);
 	    uint16_t temp = reg_ac - src - (get_carry() ? 0 : 1);
 	    set_negative(temp & 0x80 != 0);
 	    set_zero(temp & 0xff == 0);
@@ -503,7 +503,7 @@ void CPU::execute() {
 	}
 	case SBC_AY: {
             uint16_t operand = pc_read2();
-	    uint8_t src = (uint8_t) memory->mem_read(operand + reg_y);
+	    uint8_t src = (uint8_t) mem_read(operand + reg_y);
 	    uint16_t temp = reg_ac - src - (get_carry() ? 0 : 1);
 	    set_negative(temp & 0x80 != 0);
 	    set_zero(temp & 0xff == 0);
@@ -520,7 +520,7 @@ void CPU::execute() {
 	}
 	case SBC_IX: {
             uint16_t operand = pc_read();
-	    uint8_t src = (uint8_t) memory->mem_read(memory->mem_read2(operand + reg_x));
+	    uint8_t src = (uint8_t) mem_read(mem_read2(operand + reg_x));
 	    uint16_t temp = reg_ac - src - (get_carry() ? 0 : 1);
 	    set_negative(temp & 0x80 != 0);
 	    set_zero(temp & 0xff == 0);
@@ -537,7 +537,7 @@ void CPU::execute() {
 	}
 	case SBC_IY: {
             uint16_t operand = pc_read();
-	    uint8_t src = (uint8_t) memory->mem_read(memory->mem_read2(operand) + reg_y));
+	    uint8_t src = (uint8_t) mem_read(mem_read2(operand) + reg_y));
 	    uint16_t temp = reg_ac - src - (get_carry() ? 0 : 1);
 	    set_negative(temp & 0x80 != 0);
 	    set_zero(temp & 0xff == 0);
@@ -575,7 +575,7 @@ void CPU::execute() {
 	}
 	case ADC_Z: {
             uint16_t operand = pc_read();
-	    uint8_t src = (uint8_t) memory->mem_read(operand);
+	    uint8_t src = (uint8_t) mem_read(operand);
 	    uint16_t temp = reg_ac + src + (get_carry() ? 1 : 0);
 	    set_zero(temp & 0xff == 0);
 	    if(get_demical()) {
@@ -596,7 +596,7 @@ void CPU::execute() {
 	}
 	case ADC_ZX: {
             uint16_t operand = pc_read();
-	    uint8_t src = (uint8_t) memory->mem_read(operand + reg_x);
+	    uint8_t src = (uint8_t) mem_read(operand + reg_x);
 	    uint16_t temp = reg_ac + src + (get_carry() ? 1 : 0);
 	    set_zero(temp & 0xff == 0);
 	    if(get_demical()) {
@@ -617,7 +617,7 @@ void CPU::execute() {
 	}
 	case ADC_A: {
             uint16_t operand = pc_read2();
-	    uint8_t src = (uint8_t) memory->mem_read(operand);
+	    uint8_t src = (uint8_t) mem_read(operand);
 	    uint16_t temp = reg_ac + src + (get_carry() ? 1 : 0);
 	    set_zero(temp & 0xff == 0);
 	    if(get_demical()) {
@@ -638,7 +638,7 @@ void CPU::execute() {
 	}
 	case ADC_AX: {
             uint16_t operand = pc_read2();
-	    uint8_t src = (uint8_t) memory->mem_read(operand + reg_x);
+	    uint8_t src = (uint8_t) mem_read(operand + reg_x);
 	    uint16_t temp = reg_ac + src + (get_carry() ? 1 : 0);
 	    set_zero(temp & 0xff == 0);
 	    if(get_demical()) {
@@ -659,7 +659,7 @@ void CPU::execute() {
 	}
 	case ADC_AY: {
             uint16_t operand = pc_read2();
-	    uint8_t src = (uint8_t) memory->mem_read(operand + reg_y);
+	    uint8_t src = (uint8_t) mem_read(operand + reg_y);
 	    uint16_t temp = reg_ac + src + (get_carry() ? 1 : 0);
 	    set_zero(temp & 0xff == 0);
 	    if(get_demical()) {
@@ -680,7 +680,7 @@ void CPU::execute() {
 	}
 	case ADC_IX: {
             uint16_t operand = pc_read();
-	    uint8_t src = (uint8_t) memory->mem_read(memory->mem_read2(operand + reg_x));
+	    uint8_t src = (uint8_t) mem_read(memory->mem_read2(operand + reg_x));
 	    uint16_t temp = reg_ac + src + (get_carry() ? 1 : 0);
 	    set_zero(temp & 0xff == 0);
 	    if(get_demical()) {
@@ -701,7 +701,7 @@ void CPU::execute() {
 	}
 	case ADC_IY: {
             uint16_t operand = pc_read();
-	    uint8_t src = (uint8_t) memory->mem_read(memory->mem_read2(operand) + reg_y));
+	    uint8_t src = (uint8_t)mem_read(memory->mem_read2(operand) + reg_y));
 	    uint16_t temp = reg_ac + src + (get_carry() ? 1 : 0);
 	    set_zero(temp & 0xff == 0);
 	    if(get_demical()) {
@@ -735,7 +735,7 @@ void CPU::execute() {
         }
 	case AND_Z: {
             uint16_t operand = pc_read();
-            reg_ac &= (uint8_t) memory->mem_read(operand);
+            reg_ac &= (uint8_t) mem_read(operand);
             if(reg_ac & 0x80 == 0)
 		set_negative(false);
     	    else
@@ -748,7 +748,7 @@ void CPU::execute() {
         }
 	case AND_ZX: {
             uint16_t operand = pc_read();
-            reg_ac &= (uint8_t) memory->mem_read(operand + reg_x);
+            reg_ac &= (uint8_t) mem_read(operand + reg_x);
             if(reg_ac & 0x80 == 0)
 		set_negative(false);
     	    else
@@ -761,7 +761,7 @@ void CPU::execute() {
         }
 	case AND_A: {
             uint16_t operand =pc_read2();
-            reg_ac &= (uint8_t) memory->mem_read(operand);
+            reg_ac &= (uint8_t) mem_read(operand);
             if(reg_ac & 0x80 == 0)
 		set_negative(false);
     	    else
@@ -787,7 +787,7 @@ void CPU::execute() {
         }
 	case AND_AY: {
             uint16_t operand = pc_read2();
-            reg_ac &= (uint8_t) memory->mem_read(operand + reg_y);
+            reg_ac &= (uint8_t) mem_read(operand + reg_y);
             if(reg_ac & 0x80 == 0)
 		set_negative(false);
     	    else
@@ -800,7 +800,7 @@ void CPU::execute() {
         }
 	case AND_IX: {
             uint16_t operand = pc_read();
-            reg_ac &= (uint8_t) memory->mem_read(memory->mem_read2(operand + reg_x));
+            reg_ac &= (uint8_t) mem_read(mem_read2(operand + reg_x));
             if(reg_ac & 0x80 == 0)
 		set_negative(false);
     	    else
@@ -813,7 +813,7 @@ void CPU::execute() {
         }
 	case AND_IY: {
             uint16_t operand = pc_read();
-            reg_ac &= (uint8_t) memory->mem_read((memory->mem_read2(operand) + reg_y);
+            reg_ac &= (uint8_t) mem_read(mem_read2(operand) + reg_y);
             if(reg_ac & 0x80 == 0)
 		set_negative(false);
     	    else
