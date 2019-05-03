@@ -187,6 +187,9 @@
 #define TXS     0x9A
 #define TYA     0x98
 
+#define NEGATIVE(operand) (operand & 0x80)
+#define ZERO(operand) (operand == 0)
+
 class Mem;
 
 class CPU {
@@ -212,6 +215,11 @@ private:
     // status register
     uint8_t reg_p;
     
+    // instructions
+    void lda(uint8_t operand);
+    void ldx(uint8_t operand);
+    void ldy(uint8_t operand);
+    
     void set_negative(bool value);
     void set_overflow(bool value);
     
@@ -220,6 +228,21 @@ private:
     void set_interrupt(bool value);
     void set_zero(bool value);
     void set_carry(bool value);
+    
+    // cycle stuff
+    uint8_t cycles;
+    
+    // clocked events
+    uint8_t mem_read(uint64_t index);
+    uint16_t mem_read2(uint64_t index);
+    void mem_write(uint64_t index, uint8_t value);
+    
+    uint8_t pc_read();
+    uint16_t pc_read2();
+    void push(uint8_t value);
+    void push16(uint16_t value);
+    uint8_t pop();
+    uint16_t pop16();
     
 public:
     CPU(std::shared_ptr<Mem> memory);
