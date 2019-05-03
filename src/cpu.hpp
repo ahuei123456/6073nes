@@ -187,6 +187,9 @@
 #define TXS     0x9A
 #define TYA     0x98
 
+#define NEGATIVE(operand) (operand & 0x80)
+#define ZERO(operand) (operand == 0)
+
 class Mem;
 
 class CPU {
