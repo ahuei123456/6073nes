@@ -25,6 +25,8 @@
 #define VALID_ROM_INDEX(index) (index >= NROM_START && index < CPU_MEM_SIZE)
 #define ACTUAL_ROM_ADDRESS(index) (index - NROM_START)
 
+#define PAGE_SHIFT(new, old) (if ((new >> 8) > (old >> 8)) cycles++)
+
 // ppu stuff
 
 #define PATTERN_TABLE   0x1000

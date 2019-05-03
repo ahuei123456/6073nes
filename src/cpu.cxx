@@ -41,117 +41,140 @@ uint16_t CPU::execute() {
             uint16_t shift = address + reg_x;
             
             // if adding the value of register x crosses a page boundary, take another cycle
-            if ((shift >> 8) > (address >> 8)) {
-                cycles++;
-            }
+            PAGE_SHIFT(shift, address);
             
             uint8_t operand = mem_read(shift);
             lda(operand);
             break;
         }
         case LDA_AY: {
-            uint16_t operand = pc_read2();
-            reg_ac = (uint8_t) mem_read(operand + reg_y);
+            uint16_t address = pc_read2();
+            uint16_t shift = address + reg_y;
+            
+            // if adding the value of register x crosses a page boundary, take another cycle
+            PAGE_SHIFT(shift, address);
+            
+            uint8_t operand = mem_read(shift);
             lda(operand);
             break;
         }
         case LDA_IX: {
-            uint16_t operand = pc_read();
-            reg_ac = (uint8_t) mem_read(mem_read2(operand + reg_x));
-            lda(operand);
+            uint8_t operand = pc_read();
+            uint16_t address = mem_read2((uint8_t) (operand + reg_x));
+            uint8_t value = mem_read(address);
+            cycles++;
+            
+            lda(value);
             break;
         }
-	case LDA_IY: {
-            uint16_t operand = pc_read();
-            reg_ac = (uint8_t)mem_read(mem_read2(operand) + reg_y);
-            lda(operand);
+        case LDA_IY: {
+            uint8_t operand = pc_read();
+            uint16_t address = mem_read2(operand);
+            uint16_t shift = address + reg_y;
+            
+            PAGE_SHIFT(shift, address);
+            
+            uint8_t value = mem_read(address + reg_y)
+            
+            lda(value);
             break;
         }
         case LDX_I: {
-            uint16_t operand = pc_read();
-	    reg_x = (uint8_t) operand;
+            uint8_t operand = pc_read();
             ldx(operand);
             break;
         }
-	case LDX_Z: {
-            uint16_t operand = pc_read();
-            reg_x = (uint8_t) mem_read(operand);
-            ldx(operand);
+        case LDX_Z: {
+            uint8_t address = pc_read();
+            uint8_t value = mem_read(operand);
+            ldx(value);
             break;
         }
-	case LDX_ZY: {
-            uint16_t operand = pc_read();
-            reg_x = (uint8_t) mem_read(operand + reg_y);
-            ldx(operand);
+        case LDX_ZY: {
+            uint8_t address = pc_read();
+            uint8_t value = mem_read(address + reg_x);
+            cycles++;
+            ldx(value);
             break;
         }
-	case LDX_A: {
-            uint16_t operand = pc_read2();
-            reg_x = (uint8_t) mem_read(operand);
-            ldx(operand);
-	    break;
-	}
-	case LDX_AY: {
-            uint16_t operand = pc_read2();
-            reg_x = (uint8_t) mem_read(operand + reg_y);
-            ldx(operand);
+        case LDX_A: {   
+            uint16_t address = pc_read2();
+            uint8_t value = mem_read(address);
+            ldx(value);
+            break;
+        }
+        case LDX_AY: {
+            uint16_t address = pc_read2();
+            uint16_t shift = address + reg_y;
+            
+            PAGE_SHIFT(shift, address);
+            uint8_t value = mem_read(shift);
+            ldx(value);
             break;
         }
         case LDY_I: {
-            uint16_t operand = pc_read();
-	    reg_y = (uint8_t) operand;
+            uint8_t operand = pc_read();
             ldy(operand);
             break;
         }
-	case LDY_Z: {
-            uint16_t operand = pc_read();
-            reg_y = (uint8_t)mem_read(operand);
+        case LDY_Z: {
+            uint8_t operand = pc_read();
+            uint8_t value = mem_read(operand);
+            ldy(value);
+            break;
+        }
+        case LDY_ZX: {
+            uint8_t operand = pc_read();
+            uint8_t value = mem_read(operand + reg_x);
+            cycles++;
+            ldy(value);
+            break;
+        }
+        case LDY_A: {
+            uint16_t address = pc_read2();
+            uint8_t value = mem_read(address);
             ldy(operand);
             break;
         }
-	case LDY_ZX: {
-            uint16_t operand = pc_read();
-            reg_y = (uint8_t) mem_read(operand + reg_x);
-            ldy(operand);
+        case LDY_AX: {
+            uint16_t address = pc_read2();
+            uint16_t shift = address + reg_x;
+            
+            PAGE_SHIFT(shift, address);
+            uint8_t value = mem_read(shift);
+            ldy(value);
             break;
         }
-	case LDY_A: {
-            uint16_t operand = pc_read();
-            reg_y = (uint8_t) mem_read(operand);
-            ldy(operand);
-	    break;
-	}
-	case LDY_AX: {
-            uint16_t operand =pc_read2();
-            reg_y = (uint8_t) mem_read(operand + reg_x);
-            ldy(operand);
+        case STA_Z: {
+            uint8_t address = pc_read();
+            mem_write(address, reg_ac);
             break;
         }
-	case STA_Z: {
-            uint16_t operand = pc_read();
-            mem_write(operand, reg_ac);
-	    break;
-	}
-	case STA_ZX: {
-            uint16_t operand = pc_read();
-            mem_write(operand+reg_x, reg_ac);
-	    break;
-	}
-	case STA_A: {
-            uint16_t operand = pc_read();
-            mem_write(operand, reg_ac);
-	    break;
-	}
-	case STA_AX: {
-            uint16_t operand = pc_read2();
-            mem_write(operand+reg_x, reg_ac);
-	    break;
-	}
-	case STA_AY: {
-            uint16_t operand = pc_read2();
-            mem_write(operand+reg_y, reg_ac);
-	    break;
-	}
+        case STA_ZX: {
+            uint8_t address = pc_read();
+            mem_write(address + reg_x, reg_ac);
+            cycles++;
+            break;
+        }
+        case STA_A: {
+            uint16_t address = pc_read2();
+            mem_write(address, reg_ac);
+            break;
+        }
+        case STA_AX: {
+            uint16_t address = pc_read2();
+            uint16_t shift = address + reg_x;
+            PAGE_SHIFT(shift, address);
+            mem_write(shift, reg_ac);
+            break;
+        }
+        case STA_AY: {
+            uint16_t address = pc_read2();
+            uint16_t shift = address + reg_y;
+            PAGE_SHIFT(shift, address);
+            mem_write(shift, reg_ac);
+            break;
+        }
 	case STA_IX: {
             uint16_t operand = pc_read();
             mem_write(mem_read2(operand+reg_x), reg_ac);
