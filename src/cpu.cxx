@@ -680,7 +680,7 @@ void CPU::execute() {
 	}
 	case ADC_IX: {
             uint16_t operand = pc_read();
-	    uint8_t src = (uint8_t) mem_read(memory->mem_read2(operand + reg_x));
+	    uint8_t src = (uint8_t) mem_read(mem_read2(operand + reg_x));
 	    uint16_t temp = reg_ac + src + (get_carry() ? 1 : 0);
 	    set_zero(temp & 0xff == 0);
 	    if(get_demical()) {
@@ -701,7 +701,7 @@ void CPU::execute() {
 	}
 	case ADC_IY: {
             uint16_t operand = pc_read();
-	    uint8_t src = (uint8_t)mem_read(memory->mem_read2(operand) + reg_y));
+	    uint8_t src = (uint8_t)mem_read(mem_read2(operand) + reg_y));
 	    uint16_t temp = reg_ac + src + (get_carry() ? 1 : 0);
 	    set_zero(temp & 0xff == 0);
 	    if(get_demical()) {
