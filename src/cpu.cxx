@@ -64,53 +64,25 @@ void CPU::execute() {
 	case LDA_IY: {
             uint16_t operand = pc_read();
             reg_ac = (uint8_t) memory->mem_read((memory->mem_read2(operand) + reg_y);
-            if(reg_ac & 0x80 == 0)
-		set_negative(false);
-    	    else
-		set_negative(true);
-    	    if(reg_ac == 0x0)
-    		set_zero(true);
-    	    else 
-		set_zero(false);
+            lda(operand);
             break;
         }
         case LDX_I: {
             uint16_t operand = pc_read();
 	    reg_x = (uint8_t) operand;
-            if(reg_x & 0x80 == 0)
-		set_negative(false);
-    	    else
-		set_negative(true);
-    	    if(reg_x == 0x0)
-    		set_zero(true);
-    	    else 
-		set_zero(false);
+            lda(operand);
             break;
         }
 	case LDX_Z: {
             uint16_t operand = pc_read();
             reg_x = (uint8_t) memory->mem_read(operand);
-            if(reg_x & 0x80 == 0)
-		set_negative(false);
-    	    else
-		set_negative(true);
-    	    if(reg_x == 0x0)
-    		set_zero(true);
-    	    else 
-		set_zero(false);
+            lda(operand);
             break;
         }
 	case LDX_ZY: {
             uint16_t operand = pc_read();
             reg_x = (uint8_t) memory->mem_read(operand + reg_y);
-            if(reg_x & 0x80 == 0)
-		set_negative(false);
-    	    else
-		set_negative(true);
-    	    if(reg_x == 0x0)
-    		set_zero(true);
-    	    else 
-		set_zero(false);
+            lda(operand);
             break;
         }
 	case LDX_A: {
@@ -129,79 +101,37 @@ void CPU::execute() {
 	case LDX_AY: {
             uint16_t operand = pc_read2();
             reg_x = (uint8_t) memory->mem_read(operand + reg_y);
-            if(reg_x & 0x80 == 0)
-		set_negative(false);
-    	    else
-		set_negative(true);
-    	    if(reg_x == 0x0)
-    		set_zero(true);
-    	    else 
-		set_zero(false);
+            lda(operand);
             break;
         }
         case LDY_I: {
             uint16_t operand = pc_read();
 	    reg_y = (uint8_t) operand;
-            if(reg_y & 0x80 == 0)
-		set_negative(false);
-    	    else
-		set_negative(true);
-    	    if(reg_y == 0x0)
-    		set_zero(true);
-    	    else 
-		set_zero(false);
+            lda(operand);
             break;
         }
 	case LDY_Z: {
             uint16_t operand = pc_read();
             reg_y = (uint8_t) memory->mem_read(operand);
-            if(reg_y & 0x80 == 0)
-		set_negative(false);
-    	    else
-		set_negative(true);
-    	    if(reg_y == 0x0)
-    		set_zero(true);
-    	    else 
-		set_zero(false);
+            lda(operand);
             break;
         }
 	case LDY_ZX: {
             uint16_t operand = pc_read();
             reg_y = (uint8_t) memory->mem_read(operand + reg_x);
-            if(reg_y & 0x80 == 0)
-		set_negative(false);
-    	    else
-		set_negative(true);
-    	    if(reg_y == 0x0)
-    		set_zero(true);
-    	    else 
-		set_zero(false);
+           lda(operand);
             break;
         }
 	case LDY_A: {
             uint16_t operand = pc_read();
             reg_y = (uint8_t) memory->mem_read(operand);
-            if(reg_y & 0x80 == 0)
-		set_negative(false);
-    	    else
-		set_negative(true);
-    	    if(reg_y == 0x0)
-    		set_zero(true);
-    	    else 
-		set_zero(false);
+           lda(operand);
 	    break;
 	}
 	case LDY_AX: {
             uint16_t operand =pc_read2();
             reg_y = (uint8_t) memory->mem_read(operand + reg_x);
-            if(reg_y & 0x80 == 0)
-		set_negative(false);
-    	    else
-		set_negative(true);
-    	    if(reg_y == 0x0)
-    		set_zero(true);
-    	    else 
-		set_zero(false);
+            lda(operand);
             break;
         }
 	case STA_Z: {
