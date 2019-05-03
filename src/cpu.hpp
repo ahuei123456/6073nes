@@ -218,10 +218,24 @@ private:
     // status register
     uint8_t reg_p;
     
+    // addressing modes
+    uint8_t imm();
+    uint8_t zp();
+    uint8_t zp_x();
+    uint8_t zp_y();
+    uint8_t abs();
+    uint8_t abs_x();
+    uint8_t abs_y();
+    uint8_t ind_x();
+    uint8_t ind_y();
+    
     // instructions
     void lda(uint8_t operand);
     void ldx(uint8_t operand);
     void ldy(uint8_t operand);
+    void sbc(uint8_t operand);
+    void adc(uint8_t operand);
+    void check_nz(uint8_t operand);
     
     void page_shift(uint16_t shift, uint16_t addr);
     
