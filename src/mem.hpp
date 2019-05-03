@@ -5,9 +5,7 @@
 #include <cstdint>
 #include <array>
 #include <memory>
-#include <exception>
 #include "rom.hpp"
-#include "ppu.hpp"
 #include "cpu.hpp"
 
 #define NROM_128        16384

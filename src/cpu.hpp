@@ -187,6 +187,9 @@
 #define TXS     0x9A
 #define TYA     0x98
 
+#define NEGATIVE(operand) (operand & 0x80)
+#define ZERO(operand) (operand == 0)
+
 class Mem;
 
 class CPU {
@@ -211,6 +214,11 @@ private:
     
     // status register
     uint8_t reg_p;
+    
+    // instructions
+    void lda(uint8_t operand);
+    void ldx(uint8_t operand);
+    void ldy(uint8_t operand);
     
     void set_negative(bool value);
     void set_overflow(bool value);
