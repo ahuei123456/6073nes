@@ -41,7 +41,12 @@ void NES::execute() {
         cycles_until_ppu += 3;
     } else {
         uint16_t passed = cpu->execute();
-        cycles += passed;
-        cycles_until_ppu -= passed;
+        if (passed == ERROR) {
+            std::cout << "cycles: " << cycles << std::endl;
+            exit(0);
+        } else {
+            cycles += passed;
+            cycles_until_ppu -= passed;
+        }
     }
 }

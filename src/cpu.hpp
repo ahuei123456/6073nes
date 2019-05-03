@@ -123,6 +123,7 @@
 #define LSR_AX  0x5E
 
 #define NOP     0xEA
+#define NOP_2   0xC2
 
 #define ORA_I   0x09
 #define ORA_Z   0x05
@@ -188,6 +189,8 @@
 #define TXA     0x8A
 #define TXS     0x9A
 #define TYA     0x98
+
+#define ERROR   0xFFFF
 
 #define NEGATIVE(operand) (operand & 0x80)
 #define ZERO(operand) (operand == 0)

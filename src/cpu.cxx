@@ -493,10 +493,31 @@ uint16_t CPU::execute() {
             set_interrupt(1);
             break;
         }
+        case CLD: {
+            set_decimal(0);
+            break;
+        }
+        case CLI: {
+            set_interrupt(0);
+            break;
+        }
+        case CLC: {
+            set_carry(0);
+            break;
+        }
+        case CLV: {
+            set_overflow(0);
+            break;
+        }
+        case NOP:
+        case NOP_2: {
+            cycles++;
+            break;
+        }
         default: {
             std::cout << "invalid opcode: " << std::hex << unsigned(opcode) << std::endl;
             std::cout << "byte 02: " << std::hex << unsigned(memory->mem_read(2)) << std::endl;
-            exit(0);
+            return ERROR;
         }
         // add all the other opcodes
     }
