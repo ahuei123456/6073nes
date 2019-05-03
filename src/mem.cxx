@@ -19,6 +19,14 @@ Mem::Mem(std::shared_ptr<ROM> game) {
     }
 }
 
+void Mem::set_cpu(std::shared_ptr<CPU> cpu) {
+    this->cpu = cpu;
+}
+
+void Mem::set_ppu(std::shared_ptr<PPU> ppu) {
+    this->ppu = ppu;
+}
+
 uint16_t Mem::reset_vector() {
     return mem_read2(RESET_VECTOR);
 }

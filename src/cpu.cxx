@@ -7,7 +7,7 @@ CPU::CPU(std::shared_ptr<Mem> memory) {
     reg_pc = memory->reset_vector();
 }
 
-void CPU::execute() {
+uint16_t CPU::execute() {
     cycles = 0;
     uint8_t opcode = pc_read();
     
@@ -119,6 +119,8 @@ void CPU::execute() {
     
     std::cout << "opcode: " << std::hex << unsigned(opcode) << std::endl;
     std::cout << "cycles: " << unsigned(cycles) << std::endl;
+    
+    return cycles;
 }
 
 void CPU::set_negative(bool value) {

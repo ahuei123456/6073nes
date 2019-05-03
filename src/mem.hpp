@@ -49,6 +49,8 @@
 #define PPU_REGISTER_READABLE(index) (index == 0x2002 || index == 0x2004 || index == 0x2007)
 
 class ROM;
+class CPU;
+class PPU;
 
 class Mem {
 private: 
@@ -56,10 +58,12 @@ private:
     std::array<uint8_t, PPU_MEM_SIZE> ppu_mem;
     
     // cpu
+    std::shared_ptr<CPU> cpu;
     std::array<uint8_t, RAM> ram;
     std::array<uint8_t, CPU_MEM_SIZE - NROM_START> prg_rom;
     
     // ppu
+    std::shared_ptr<PPU> ppu;
     std::array<uint8_t, PATTERN_TABLE> left;
     std::array<uint8_t, PATTERN_TABLE> right;
     std::array<std::array<uint8_t, NAMETABLE>, 4> nametables;
@@ -71,6 +75,10 @@ private:
     void oam_write(uint8_t value);
     
 public:
+    
+    // setup
+    void set_cpu(std::shared_ptr<CPU> cpu);
+    void set_ppu(std::shared_ptr<PPU> ppu);
 
     // cpu only methods
     Mem(std::shared_ptr<ROM> game);

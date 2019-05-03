@@ -27,3 +27,7 @@ void PPU::set_reg(uint64_t index, uint8_t value) {
     
     regs[index] = value;
 }
+
+void PPU::execute() {
+    
+}

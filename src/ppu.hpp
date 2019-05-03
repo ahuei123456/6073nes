@@ -43,6 +43,7 @@ public:
     void set_reg(uint64_t index, uint8_t value);
     
     void set_oam();
+    void execute();
 };
 
 #endif

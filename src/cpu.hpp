@@ -238,7 +238,7 @@ private:
     
 public:
     CPU(std::shared_ptr<Mem> memory);
-    void execute();
+    uint16_t execute();
     
     uint8_t get_ac();
     uint8_t get_x();
