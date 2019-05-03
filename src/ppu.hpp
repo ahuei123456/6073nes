@@ -38,11 +38,22 @@ private:
     uint8_t read_buffer;
 
     uint16_t vram_addr;
+    uint16_t temp_vram_addr;
     //Positions for upper left corner of screen
     uint8_t scroll_x;
     uint8_t scroll_y;
+    uint8_t fine_x;
     //Determines whether x or y coordinate is set next. If false, x-coordinate. If true, y-coordinate.
     bool addr_latch = false;
+
+    uint8_t current_scanline = -1;
+    uint8_t cycle_mod_8 = 0;
+    uint8_t nametable_byte;
+    uint8_t attribute_byte;
+    uint8_t tile_low;
+    uint8_t tile_high;
+
+    std::array<std::array<uint8_t, 256>, 240> pixel_array;
 
 public:
     PPU(std::shared_ptr<Mem> memory);
@@ -57,12 +68,14 @@ public:
     void inc_vram_addr(uint8_t type);
 
     void set_scroll_coord(uint8_t value);
-   
+
     void update_buffer();
 
     uint8_t get_buffer();
 
     void reset_addr_latch();
+
+    void execute();
 };
 
 #endif
