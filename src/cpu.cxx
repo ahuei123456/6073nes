@@ -903,6 +903,18 @@ uint16_t CPU::execute() {
             reg_pc = pop16() + 1;
             break;
         }
+        case SEC: {
+            set_carry(1);
+            break;
+        }
+        case SED: {
+            set_decimal(1);
+            break;
+        }
+        case SEI: {
+            set_interrupt(1);
+            break;
+        }
         default: {
             std::cout << "invalid opcode: " << std::hex << unsigned(opcode) << std::endl;
             std::cout << "byte 02: " << std::hex << unsigned(memory->mem_read(2)) << std::endl;
