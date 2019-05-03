@@ -112,7 +112,9 @@ uint16_t CPU::execute() {
             break;
         }
         default: {
-            break;
+            std::cout << "invalid opcode: " << std::hex << unsigned(opcode) << std::endl;
+            std::cout << "byte 02: " << std::hex << unsigned(memory->mem_read(2)) << std::endl;
+            exit(0);
         }
         // add all the other opcodes
     }

@@ -35,6 +35,8 @@ public:
     NES(const char* filename);
     void run();
     void execute();
+    
+    void cpu_run();
 };
 
 #endif

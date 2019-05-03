@@ -29,6 +29,12 @@ void NES::run() {
     }
 }
 
+void NES::cpu_run() {
+    while(true) {
+        cpu->execute();
+    }
+}
+
 void NES::execute() {
     if (cycles_until_ppu <= 0) {
         ppu->execute();
