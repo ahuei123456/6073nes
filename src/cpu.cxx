@@ -70,68 +70,61 @@ void CPU::execute() {
         case LDX_I: {
             uint16_t operand = pc_read();
 	    reg_x = (uint8_t) operand;
-            lda(operand);
+            ldx(operand);
             break;
         }
 	case LDX_Z: {
             uint16_t operand = pc_read();
             reg_x = (uint8_t) memory->mem_read(operand);
-            lda(operand);
+            ldx(operand);
             break;
         }
 	case LDX_ZY: {
             uint16_t operand = pc_read();
             reg_x = (uint8_t) memory->mem_read(operand + reg_y);
-            lda(operand);
+            ldx(operand);
             break;
         }
 	case LDX_A: {
             uint16_t operand = pc_read2();
             reg_x = (uint8_t) memory->mem_read(operand);
-            if(reg_x & 0x80 == 0)
-		set_negative(false);
-    	    else
-		set_negative(true);
-    	    if(reg_x == 0x0)
-    		set_zero(true);
-    	    else 
-		set_zero(false);
+            ldx(operand);
 	    break;
 	}
 	case LDX_AY: {
             uint16_t operand = pc_read2();
             reg_x = (uint8_t) memory->mem_read(operand + reg_y);
-            lda(operand);
+            ldx(operand);
             break;
         }
         case LDY_I: {
             uint16_t operand = pc_read();
 	    reg_y = (uint8_t) operand;
-            lda(operand);
+            ldy(operand);
             break;
         }
 	case LDY_Z: {
             uint16_t operand = pc_read();
             reg_y = (uint8_t) memory->mem_read(operand);
-            lda(operand);
+            ldy(operand);
             break;
         }
 	case LDY_ZX: {
             uint16_t operand = pc_read();
             reg_y = (uint8_t) memory->mem_read(operand + reg_x);
-           lda(operand);
+            ldy(operand);
             break;
         }
 	case LDY_A: {
             uint16_t operand = pc_read();
             reg_y = (uint8_t) memory->mem_read(operand);
-           lda(operand);
+            ldy(operand);
 	    break;
 	}
 	case LDY_AX: {
             uint16_t operand =pc_read2();
             reg_y = (uint8_t) memory->mem_read(operand + reg_x);
-            lda(operand);
+            ldy(operand);
             break;
         }
 	case STA_Z: {
