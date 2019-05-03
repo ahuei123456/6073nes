@@ -175,26 +175,27 @@ uint16_t CPU::execute() {
             mem_write(shift, reg_ac);
             break;
         }
-	case STA_IX: {
+        // check over everything after this
+        case STA_IX: {
             uint16_t operand = pc_read();
             mem_write(mem_read2(operand+reg_x), reg_ac);
-	    break;
-	}
-	case STA_IY: {
+            break;
+        }
+        case STA_IY: {
             uint16_t operand = pc_read();
             mem_write(mem_read2(operand) + reg_y, reg_ac);
-	    break;
-	}
-	case STX_Z: {
+            break;
+        }
+        case STX_Z: {
             uint16_t operand =pc_read();
             mem_write(operand, reg_x);
-	    break;
-	}
-	case STX_ZY: {
+            break;
+        }
+        case STX_ZY: {
             uint16_t operand = pc_read();
             mem_write(operand+reg_y, reg_x);
-	    break;
-	}
+            break;
+        }
 	case STX_A: {
             uint16_t operand = pc_read2();
             mem_write(operand, reg_x);
