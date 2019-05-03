@@ -101,6 +101,8 @@
 #define LDA_A   0xAD
 #define LDA_AX  0xBD
 #define LDA_AY  0xB9
+#define LDA_IX  0xA1
+#define LDA_IY  0xB1
 
 #define LDX_Z   0xA6
 #define LDX_ZY  0xB6
@@ -189,6 +191,7 @@
 
 #define NEGATIVE(operand) (operand & 0x80)
 #define ZERO(operand) (operand == 0)
+#define PAGE_SHIFT(new, old) page_shift(new, old)
 
 class Mem;
 
@@ -219,6 +222,8 @@ private:
     void lda(uint8_t operand);
     void ldx(uint8_t operand);
     void ldy(uint8_t operand);
+    
+    void page_shift(uint16_t shift, uint16_t addr);
     
     void set_negative(bool value);
     void set_overflow(bool value);
