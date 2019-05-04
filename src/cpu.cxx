@@ -348,6 +348,13 @@ uint16_t CPU::execute() {
             adc(ind_y());
             break;
         }
+        /////////
+        // AND //
+        /////////
+
+        //A logical AND is performed, bit by bit, on the accumulator contents 
+        // using the contents of a byte of memory.
+
         case AND_I: {
             uint16_t operand = pc_read();
             reg_ac &= (uint8_t) operand;
@@ -395,6 +402,655 @@ uint16_t CPU::execute() {
             reg_ac &= mem_read(mem_read2(operand) + reg_y);
             check_nz(reg_ac);
             break;
+        }
+        /////////
+        // ASL //
+        /////////
+
+        // This operation shifts all the bits of the accumulator or memory contents one bit left.
+        // Bit 0 is set to 0 and bit 7 is placed in the carry flag.
+        // The effect of this operation is to multiply the memory contents by 2
+        // (ignoring 2's complement considerations), setting the carry if the result will not fit in 8 bits.
+
+        case ASL_AC: {
+            set_carry(reg_ac >> 7);
+            
+            reg_ac = reg_ac << 1;
+            set_negative(NEGATIVE(reg_ac));
+            set_zero(ZERO(reg_ac));
+            break;
+        }
+        case ASL_Z: {
+            uint8_t address = pc_read();
+            uint16_t operand = mem_read(address);
+
+            set_carry(operand >> 7);
+            operand = operand << 1;
+            mem_write(address, operand);
+            set_negative(NEGATIVE(operand));
+            set_zero(ZERO(operand)); 
+            break;
+        }
+        case ASL_ZX: {
+            uint8_t address = pc_read();
+            uint16_t operand = mem_read(address + reg_x);
+            cycles++;
+            set_carry(operand >> 7);
+            operand = operand << 1;
+            mem_write(address, operand);
+            set_negative(NEGATIVE(operand));
+            set_zero(ZERO(operand)); 
+            break;
+        }
+        case ASL_A: {
+            uint8_t address = pc_read2();
+            uint16_t operand = mem_read(address);
+
+            set_carry(operand >> 7);
+            //reg_ac = reg_ac << 1;
+            operand = operand << 1;
+            mem_write(address, operand);
+            set_negative(NEGATIVE(operand));
+            set_zero(ZERO(operand));
+            break;
+        }
+        case ASL_AX: {
+            uint16_t address = pc_read2();
+            uint16_t shift = address + reg_x;
+            
+            // if adding the value of register x crosses a page boundary, take another cycle
+            PAGE_SHIFT(shift, address);
+            
+            uint8_t operand = mem_read(shift);
+
+            set_carry(operand >> 7);
+            //reg_ac = reg_ac << 1;
+            operand = operand << 1;
+            mem_write(address, operand);
+            set_negative(NEGATIVE(operand));
+            break;
+        }
+
+        /////////
+        // BIT //
+        /////////
+
+        // BIT sets the Z flag as though the value in the address tested were ANDed with the accumulator.
+        // The S and V flags are set to match bits 7 and 6 respectively in the value stored at the tested address.
+        
+        case BIT_Z: {
+
+            set_zero(ZERO(reg_ac & LC_ADDRESS));//????
+            set_negative(pc_read() >> 7);
+            set_overflow(pc_read()>> 6);
+            break;
+        }
+        case BIT_A: {
+            set_zero(reg_ac & LC_ADDRESS);//????
+            set_negative(pc_read() >> 7);
+            set_overflow(pc_read() >> 6);
+            break;
+        }
+
+        /////////
+        // EOR //
+        /////////
+
+        // EOR (Exclusive OR Memory With Accumulator) performs a logical XOR on the operand 
+        // and the accumulator and stores the result in the accumulator. 
+        // This opcode is similar in function to AND and ORA.
+
+        case EOR_I: {
+            uint16_t operand = reg_ac ^ pc_read();
+            set_negative(NEGATIVE(operand));
+            set_zero(ZERO(operand));
+
+            reg_ac = (uint8_t) operand;
+        }
+        case EOR_Z: {
+            uint8_t address = pc_read();
+            uint8_t operand = reg_ac ^ mem_read(address);
+            
+            set_negative(NEGATIVE(operand));
+            set_zero(ZERO(operand));
+
+            reg_ac = (uint8_t) operand;
+        }
+        case EOR_ZX: {
+            uint8_t address = pc_read();
+            uint8_t operand = reg_ac ^ mem_read(address + reg_x);
+            cycles++;
+
+            set_negative(NEGATIVE(operand));
+            set_zero(ZERO(operand));
+
+            reg_ac = (uint8_t) operand;
+        }
+        case EOR_A: {
+            uint16_t address = pc_read2();
+            uint8_t operand = reg_ac ^ mem_read(address);
+            
+            set_negative(NEGATIVE(operand));
+            set_zero(ZERO(operand));
+
+            reg_ac = (uint8_t) operand;
+        }
+        case EOR_AX: {
+            uint16_t address = pc_read2();
+            uint16_t shift = address + reg_x;
+            
+            // if adding the value of register x crosses a page boundary, take another cycle
+            PAGE_SHIFT(shift, address);
+            
+            uint8_t operand = reg_ac ^ mem_read(shift);
+            set_negative(NEGATIVE(operand));
+            set_zero(ZERO(operand));
+            reg_ac = (uint8_t) operand;
+        }
+        case EOR_AY: {
+            uint16_t address = pc_read2();
+            uint16_t shift = address + reg_y;
+            
+            // if adding the value of register x crosses a page boundary, take another cycle
+            PAGE_SHIFT(shift, address);
+            
+            uint8_t operand = reg_ac ^ mem_read(shift);
+            set_negative(NEGATIVE(operand));
+            set_zero(ZERO(operand));
+
+            reg_ac = (uint8_t) operand;
+        }
+        case EOR_IX: {
+            uint8_t operand = pc_read();
+            uint16_t address = mem_read2((uint8_t) (operand + reg_x));
+            uint8_t value = reg_ac ^ mem_read(address);
+            cycles++;
+            set_negative(NEGATIVE(value));
+            set_zero(ZERO(operand));
+            reg_ac = (uint8_t) value;
+        }
+        case EOR_IY: {
+            uint8_t operand = pc_read();
+            uint16_t address = mem_read2(operand);
+            uint16_t shift = address + reg_y;
+            
+            PAGE_SHIFT(shift, address);
+            
+            uint8_t value = reg_ac ^ mem_read(address + reg_y);
+            set_negative(NEGATIVE(value));
+            set_zero(ZERO(value));
+            
+            reg_ac = (uint8_t) value;
+        }
+        
+        /////////
+        // LSR //
+        /////////
+
+        // Each of the bits in A or M is shift one place to the right.
+        // The bit that was in bit 0 is shifted into the carry flag. Bit 7 is set to zero.
+
+        case LSR_AC: {
+            set_carry((reg_ac << 7) >> 7);
+            reg_ac = reg_ac >> 1;
+            break;
+        }
+        case LSR_Z: {
+            uint8_t address = pc_read();
+            uint8_t operand = mem_read(address);
+            set_carry((operand << 7) >> 7);
+            operand = operand >> 1;
+            mem_write(address, operand);
+            break;
+        }
+        case LSR_ZX: {
+            uint8_t address = pc_read();
+            uint8_t operand = mem_read(address + reg_x);
+            cycles++;
+            set_carry((operand << 7) >> 7);
+            operand = operand >> 1;
+            mem_write(address, operand);
+            break;
+        }
+        case LSR_A: {
+            uint8_t address = pc_read2();
+            uint8_t operand = mem_read(address);
+            set_carry((operand << 7) >> 7);
+            operand = operand >> 1;
+            mem_write(address, operand);
+            break;
+        }
+        case LSR_AX: {
+            uint16_t address = pc_read2();
+            uint16_t shift = address + reg_x;
+            
+            // if adding the value of register x crosses a page boundary, take another cycle
+            PAGE_SHIFT(shift, address);
+            
+            uint8_t operand = mem_read(shift);
+
+            set_carry((operand << 7) >> 7);
+            operand = operand >> 1;
+            mem_write(address, operand);
+            break;
+        }
+
+        /////////
+        // ORA //
+        /////////
+
+        // ORA (Or Memory With Accumulator) performs a logical OR on the operand and the accumulator
+        // and stores the result in the accumulator. This opcode is similar in function to AND and EOR.
+        
+        case ORA_I: {
+            uint16_t operand = reg_ac | pc_read();
+            set_negative(NEGATIVE(operand));
+            set_zero(ZERO(operand));
+
+            reg_ac = (uint8_t) operand;
+        }
+        case ORA_Z: {
+            uint8_t address = pc_read();
+            uint8_t operand = reg_ac | mem_read(address);
+            
+            set_negative(NEGATIVE(operand));
+            set_zero(ZERO(operand));
+
+            reg_ac = (uint8_t) operand;
+        }
+        case ORA_ZX: {
+            uint8_t address = pc_read();
+            uint8_t operand = reg_ac | mem_read(address + reg_x);
+            cycles++;
+
+            set_negative(NEGATIVE(operand));
+            set_zero(ZERO(operand));
+
+            reg_ac = (uint8_t) operand;
+        }
+        case ORA_A: {
+            uint16_t address = pc_read2();
+            uint8_t operand = reg_ac | mem_read(address);
+            
+            set_negative(NEGATIVE(operand));
+            set_zero(ZERO(operand));
+
+            reg_ac = (uint8_t) operand;
+        }
+        case ORA_AX: {
+            uint16_t address = pc_read2();
+            uint16_t shift = address + reg_x;
+            
+            // if adding the value of register x crosses a page boundary, take another cycle
+            PAGE_SHIFT(shift, address);
+            
+            uint8_t operand = reg_ac | mem_read(shift);
+            set_negative(NEGATIVE(operand));
+            set_zero(ZERO(operand));
+            reg_ac = (uint8_t) operand;
+        }
+        case ORA_AY: {
+            uint16_t address = pc_read2();
+            uint16_t shift = address + reg_y;
+            
+            // if adding the value of register x crosses a page boundary, take another cycle
+            PAGE_SHIFT(shift, address);
+            
+            uint8_t operand = reg_ac | mem_read(shift);
+            set_negative(NEGATIVE(operand));
+            set_zero(ZERO(operand));
+
+            reg_ac = (uint8_t) operand;
+        }
+        case ORA_IX: {
+            uint8_t operand = pc_read();
+            uint16_t address = mem_read2((uint8_t) (operand + reg_x));
+            uint8_t value = reg_ac | mem_read(address);
+            cycles++;
+            set_negative(NEGATIVE(value));
+            set_zero(ZERO(operand));
+            reg_ac = (uint8_t) value;
+        }
+        case ORA_IY: {
+            uint8_t operand = pc_read();
+            uint16_t address = mem_read2(operand);
+            uint16_t shift = address + reg_y;
+            
+            PAGE_SHIFT(shift, address);
+            
+            uint8_t value = reg_ac | mem_read(address + reg_y);
+            set_negative(NEGATIVE(value));
+            set_zero(ZERO(value));
+            
+            reg_ac = (uint8_t) value;
+        }
+
+        /////////
+        // ROL //
+        /////////
+
+        // ROL shifts all bits left one position. 
+        // The Carry is shifted into bit 0 and the original bit 7 is shifted into the Carry.
+
+        case ROL_AC: {
+            uint8_t old_carry = get_carry();
+            set_carry(reg_ac >> 7);
+            reg_ac = (reg_ac << 1) | old_carry;
+            break; 
+        }
+        // Change based on memory in the future
+        case ROL_Z: {
+            uint8_t address = pc_read();
+            uint8_t operand = mem_read(address);
+            uint8_t old_carry = get_carry();
+            set_carry(operand >> 7);
+            operand = (operand << 1) | old_carry; 
+            mem_write(address, operand);
+            break;
+        }
+        case ROL_ZX: {
+            uint8_t address = pc_read();
+            uint8_t operand = mem_read(address + reg_x);
+            uint8_t old_carry = get_carry();
+            cycles++;
+            set_carry(operand >> 7);
+            operand = (operand << 1) | old_carry; 
+            mem_write(address, operand);
+            break;
+        }
+        case ROL_A: {
+            uint8_t address = pc_read2();
+            uint8_t operand = mem_read(address);
+            uint8_t old_carry = get_carry();
+            set_carry(operand >> 7);
+            operand = (operand << 1) | old_carry; 
+            mem_write(address, operand);
+            break;
+        }
+        case ROL_AX: {
+            uint8_t address = pc_read();
+            uint16_t shift = address + reg_x;
+            
+            // if adding the value of register x crosses a page boundary, take another cycle
+            PAGE_SHIFT(shift, address);
+            
+            uint8_t operand = mem_read(shift);
+            uint8_t old_carry = get_carry();
+            set_carry(operand >> 7);
+            operand = (operand << 1) | old_carry; 
+            mem_write(address, operand); 
+            break;
+        }
+
+        /////////
+        // ROR //
+        /////////
+
+        // Move each of the bits in either A or M one place to the right. 
+        // Bit 7 is filled with the current value of the carry flag whilst the old bit 0 becomes the new carry flag value.
+
+        case ROR_AC: {
+            uint8_t old_carry = get_carry();
+            set_carry((reg_ac << 7) >> 7);
+            reg_ac = (reg_ac >> 1) | (old_carry << 7); 
+        }
+        // Change based on memory in the future
+        case ROR_Z: {
+            uint8_t address = pc_read();
+            uint8_t operand = mem_read(address);
+            uint8_t old_carry = get_carry();
+            set_carry((operand << 1) >> 7);
+            operand = (operand >> 1) | (old_carry << 7); 
+            mem_write(address, operand);
+            break;
+        }
+        case ROR_ZX: {
+            uint8_t address = pc_read();
+            uint8_t operand = mem_read(address + reg_x);
+            cycles++;
+            uint8_t old_carry = get_carry();
+            set_carry((operand << 1) >> 7);
+            operand = (operand >> 1) | (old_carry << 7); 
+            mem_write(address, operand);
+            break;
+        }
+        case ROR_A: {
+            uint8_t address = pc_read2();
+            uint8_t operand = mem_read(address);
+            uint8_t old_carry = get_carry();
+            set_carry((operand << 1) >> 7);
+            operand = (operand >> 1) | (old_carry << 7); 
+            mem_write(address, operand);
+            break;
+        }
+        case ROR_AX: {
+            uint16_t address = pc_read2();
+            uint16_t shift = address + reg_x;
+            
+            // if adding the value of register x crosses a page boundary, take another cycle
+            PAGE_SHIFT(shift, address);
+            uint8_t operand = mem_read(shift);
+            uint8_t old_carry = get_carry();
+            set_carry((operand << 1) >> 7);
+            operand = (operand >> 1) | (old_carry << 7); 
+            mem_write(address, operand);
+            break;
+        }
+        
+        /////////
+        // CMP //
+        /////////
+
+        // Compare sets flags as if a subtraction had been carried out. If the value in the accumulator
+        // is equal or greater than the compared value, the Carry will be set. The equal (Z) 
+        // and negative (N) flags will be set based on equality or lack thereof and the
+        // sign (i.e. A>=$80) of the accumulator.
+
+        case CMP_I: {
+            uint16_t operand = pc_read();
+            if(reg_ac >= operand){
+                set_carry(1);
+            }
+            if(reg_ac == operand){
+                set_zero(1);
+            }
+            set_negative(NEGATIVE(reg_ac));
+            // IF negative set negative bit, but Im not sure how to do that
+            break;
+        }
+        case CMP_Z: {
+            uint8_t address = pc_read();
+            uint8_t operand = mem_read(address);
+            if(reg_ac >= operand){
+                set_carry(1);
+            }
+            if(reg_ac == operand){
+                set_zero(1);
+            }
+            set_negative(NEGATIVE(operand));
+            // IF negative set negative bit, but Im not sure how to do that
+            break;
+        }
+        case CMP_ZX: {
+            uint8_t address = pc_read();
+            uint8_t operand = mem_read(address + reg_x);
+            cycles++;
+            if(reg_ac >= operand){
+                set_carry(1);
+            }
+            if(reg_ac == operand){
+                set_zero(1);
+            }
+            set_negative(NEGATIVE(operand));
+            // IF negative set negative bit, but Im not sure how to do that
+            break;
+        }
+        case CMP_A: {
+            uint8_t address = pc_read2();
+            uint8_t operand = mem_read(address);
+            if(reg_ac >= operand){
+                set_carry(1);
+            }
+            if(reg_ac == operand){
+                set_zero(1);
+            }
+            set_negative(NEGATIVE(operand));
+            // IF negative set negative bit, but Im not sure how to do that
+            break;
+        }
+        case CMP_AX: {
+            uint16_t address = pc_read2();
+            uint16_t shift = address + reg_x;
+            
+            // if adding the value of register x crosses a page boundary, take another cycle
+            PAGE_SHIFT(shift, address);
+            
+            uint8_t operand = mem_read(shift);
+            if(reg_ac >= operand){
+                set_carry(1);
+            }
+            if(reg_ac == operand){
+                set_zero(1);
+            }
+            set_negative(NEGATIVE(operand));
+            // IF negative set negative bit, but Im not sure how to do that
+            break;
+        }
+        case CMP_AY: {
+            uint16_t address = pc_read2();
+            uint16_t shift = address + reg_y;
+            
+            // if adding the value of register x crosses a page boundary, take another cycle
+            PAGE_SHIFT(shift, address);
+            
+            uint8_t operand = mem_read(shift);
+            if(reg_ac >= operand){
+                set_carry(1);
+            }
+            if(reg_ac == operand){
+                set_zero(1);
+            }
+            set_negative(NEGATIVE(operand));
+            // IF negative set negative bit, but Im not sure how to do that
+            break;
+        }
+        case CMP_IX: {
+            uint8_t operand = pc_read();
+            uint16_t address = mem_read2((uint8_t) (operand + reg_x));
+            uint8_t value = mem_read(address);
+            cycles++;
+            if(reg_ac >= value){
+                set_carry(1);
+            }
+            if(reg_ac == value){
+                set_zero(1);
+            }
+            set_negative(NEGATIVE(value));
+            // IF negative set negative bit, but Im not sure how to do that
+            break;
+        }
+        case CMP_IY: {
+            uint8_t operand = pc_read();
+            uint16_t address = mem_read2(operand);
+            uint16_t shift = address + reg_y;
+            
+            PAGE_SHIFT(shift, address);
+            
+            uint8_t value = mem_read(address + reg_y);
+            if(reg_ac >= value){
+                set_carry(1);
+            }
+            if(reg_ac == value){
+                set_zero(1);
+            }
+            set_negative(NEGATIVE(value));
+            // IF negative set negative bit, but Im not sure how to do that
+            break;
+        }
+
+        /////////
+        // CPX //
+        /////////
+
+        // This instruction compares the contents of the X register with another
+        // memory held value and sets the zero and carry flags as appropriate.
+
+        case CPX_I: {
+            uint8_t operand = pc_read();
+            if(reg_x >= operand){
+                set_carry(1);
+            }
+            if(reg_x == operand){
+                set_zero(1);
+            }
+            set_negative(NEGATIVE(operand));
+            // IF negative set negative bit, but Im not sure how to do that
+        }
+        case CPX_Z: {
+            uint8_t address = pc_read();
+            uint8_t operand = mem_read(address);
+            if(reg_x >= operand){
+                set_carry(1);
+            }
+            if(reg_x == operand){
+                set_zero(1);
+            }
+            set_negative(NEGATIVE(operand));
+            // IF negative set negative bit, but Im not sure how to do that
+        }
+        case CPX_A: {
+            uint8_t address = pc_read2();
+            uint8_t operand = mem_read(address);
+            if(reg_x >= operand){
+                set_carry(1);
+            }
+            if(reg_x == operand){
+                set_zero(1);
+            }
+            set_negative(NEGATIVE(operand));
+            // IF negative set negative bit, but Im not sure how to do that
+        }
+
+        /////////
+        // CPY //
+        /////////
+
+        // This instruction compares the contents of the Y register with another
+        // memory held value and sets the zero and carry flags as appropriate.
+        case CPY_I: {
+            uint8_t operand = pc_read();
+            if(reg_y >= operand){
+                set_carry(1);
+            }
+            if(reg_y == operand){
+                set_zero(1);
+            }
+            set_negative(NEGATIVE(operand));
+            // IF negative set negative bit, but Im not sure how to do that
+        }
+        case CPY_Z: {
+            uint8_t address = pc_read();
+            uint8_t operand = mem_read(address);
+            if(reg_y >= operand){
+                set_carry(1);
+            }
+            if(reg_y == operand){
+                set_zero(1);
+            }
+            set_negative(NEGATIVE(operand));
+            // IF negative set negative bit, but Im not sure how to do that
+        }
+        case CPY_A: {
+            uint8_t address = pc_read2();
+            uint8_t operand = mem_read(address);
+            if(reg_y >= operand){
+                set_carry(1);
+            }
+            if(reg_y == operand){
+                set_zero(1);
+            }
+            set_negative(NEGATIVE(operand));
+            // IF negative set negative bit, but Im not sure how to do that
         }
         case BCC: {
             uint8_t operand = pc_read();

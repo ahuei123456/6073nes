@@ -190,6 +190,8 @@
 #define TXS     0x9A
 #define TYA     0x98
 
+// illegal opcodes
+
 #define ERROR   0xFFFF
 
 #define NEGATIVE(operand) (operand & 0x80)
