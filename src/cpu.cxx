@@ -3,12 +3,17 @@
 CPU::CPU(std::shared_ptr<Mem> memory) {
     this->memory = memory;
     
-    reg_s = 0xFF;
-    reg_pc = memory->reset_vector();
+    reg_s = 0xFD;
+    reg_p = 0x24;
+    reg_pc = 0xC000;
+    std::cout << std::hex << unsigned(reg_pc) << std::endl;
 }
 
 uint16_t CPU::execute() {
     cycles = 0;
+    std::cout << "SP: " << std::hex << unsigned(reg_s) << " ";
+    std::cout << "P: " << std::hex << unsigned(reg_p) << " ";
+    std::cout << std::hex << unsigned(reg_pc) << " ";
     uint8_t opcode = pc_read();
     
     switch (opcode) {
@@ -158,7 +163,7 @@ uint16_t CPU::execute() {
             break;
         }
         case STY_A: {
-            uint16_t operand = pc_read();
+            uint16_t operand = pc_read2();
             mem_write(operand, reg_y);
             break;
         }
@@ -479,16 +484,19 @@ uint16_t CPU::execute() {
         // The S and V flags are set to match bits 7 and 6 respectively in the value stored at the tested address.
         
         case BIT_Z: {
-
-            set_zero(ZERO(reg_ac & LC_ADDRESS));//????
-            set_negative(pc_read() >> 7);
-            set_overflow(pc_read()>> 6);
+            
+            uint8_t operand = zp();
+            set_zero(ZERO(reg_ac & operand));
+            set_negative(operand >> 7);
+            set_overflow((operand & 0x40) >> 6);
             break;
         }
         case BIT_A: {
-            set_zero(reg_ac & LC_ADDRESS);//????
-            set_negative(pc_read() >> 7);
-            set_overflow(pc_read() >> 6);
+            uint8_t operand = abs();
+            set_zero(ZERO(reg_ac & operand));
+            
+            set_negative(operand >> 7);
+            set_overflow((operand & 0x40) >> 6);
             break;
         }
 
@@ -648,6 +656,7 @@ uint16_t CPU::execute() {
             set_zero(ZERO(operand));
 
             reg_ac = (uint8_t) operand;
+            break;
         }
         case ORA_Z: {
             uint8_t address = pc_read();
@@ -657,6 +666,7 @@ uint16_t CPU::execute() {
             set_zero(ZERO(operand));
 
             reg_ac = (uint8_t) operand;
+            break;
         }
         case ORA_ZX: {
             uint8_t address = pc_read();
@@ -667,6 +677,7 @@ uint16_t CPU::execute() {
             set_zero(ZERO(operand));
 
             reg_ac = (uint8_t) operand;
+            break;
         }
         case ORA_A: {
             uint16_t address = pc_read2();
@@ -676,6 +687,7 @@ uint16_t CPU::execute() {
             set_zero(ZERO(operand));
 
             reg_ac = (uint8_t) operand;
+            break;
         }
         case ORA_AX: {
             uint16_t address = pc_read2();
@@ -688,6 +700,7 @@ uint16_t CPU::execute() {
             set_negative(NEGATIVE(operand));
             set_zero(ZERO(operand));
             reg_ac = (uint8_t) operand;
+            break;
         }
         case ORA_AY: {
             uint16_t address = pc_read2();
@@ -701,6 +714,7 @@ uint16_t CPU::execute() {
             set_zero(ZERO(operand));
 
             reg_ac = (uint8_t) operand;
+            break;
         }
         case ORA_IX: {
             uint8_t operand = pc_read();
@@ -710,6 +724,7 @@ uint16_t CPU::execute() {
             set_negative(NEGATIVE(value));
             set_zero(ZERO(operand));
             reg_ac = (uint8_t) value;
+            break;
         }
         case ORA_IY: {
             uint8_t operand = pc_read();
@@ -723,6 +738,7 @@ uint16_t CPU::execute() {
             set_zero(ZERO(value));
             
             reg_ac = (uint8_t) value;
+            break;
         }
 
         /////////
@@ -793,6 +809,7 @@ uint16_t CPU::execute() {
             uint8_t old_carry = get_carry();
             set_carry((reg_ac << 7) >> 7);
             reg_ac = (reg_ac >> 1) | (old_carry << 7); 
+            break;
         }
         // Change based on memory in the future
         case ROR_Z: {
@@ -976,7 +993,7 @@ uint16_t CPU::execute() {
         // memory held value and sets the zero and carry flags as appropriate.
 
         case CPX_I: {
-            uint8_t operand = pc_read();
+            uint8_t operand = imm();
             if(reg_x >= operand){
                 set_carry(1);
             }
@@ -984,11 +1001,11 @@ uint16_t CPU::execute() {
                 set_zero(1);
             }
             set_negative(NEGATIVE(operand));
+            break;
             // IF negative set negative bit, but Im not sure how to do that
         }
         case CPX_Z: {
-            uint8_t address = pc_read();
-            uint8_t operand = mem_read(address);
+            uint8_t operand = zp();
             if(reg_x >= operand){
                 set_carry(1);
             }
@@ -996,11 +1013,11 @@ uint16_t CPU::execute() {
                 set_zero(1);
             }
             set_negative(NEGATIVE(operand));
+            break;
             // IF negative set negative bit, but Im not sure how to do that
         }
         case CPX_A: {
-            uint8_t address = pc_read2();
-            uint8_t operand = mem_read(address);
+            uint8_t operand = abs();
             if(reg_x >= operand){
                 set_carry(1);
             }
@@ -1008,6 +1025,7 @@ uint16_t CPU::execute() {
                 set_zero(1);
             }
             set_negative(NEGATIVE(operand));
+            break;
             // IF negative set negative bit, but Im not sure how to do that
         }
 
@@ -1018,7 +1036,7 @@ uint16_t CPU::execute() {
         // This instruction compares the contents of the Y register with another
         // memory held value and sets the zero and carry flags as appropriate.
         case CPY_I: {
-            uint8_t operand = pc_read();
+            uint8_t operand = imm();
             if(reg_y >= operand){
                 set_carry(1);
             }
@@ -1027,10 +1045,10 @@ uint16_t CPU::execute() {
             }
             set_negative(NEGATIVE(operand));
             // IF negative set negative bit, but Im not sure how to do that
+            break;
         }
         case CPY_Z: {
-            uint8_t address = pc_read();
-            uint8_t operand = mem_read(address);
+            uint8_t operand = zp();
             if(reg_y >= operand){
                 set_carry(1);
             }
@@ -1039,10 +1057,10 @@ uint16_t CPU::execute() {
             }
             set_negative(NEGATIVE(operand));
             // IF negative set negative bit, but Im not sure how to do that
+            break;
         }
         case CPY_A: {
-            uint8_t address = pc_read2();
-            uint8_t operand = mem_read(address);
+            uint8_t operand = abs();
             if(reg_y >= operand){
                 set_carry(1);
             }
@@ -1050,64 +1068,40 @@ uint16_t CPU::execute() {
                 set_zero(1);
             }
             set_negative(NEGATIVE(operand));
+            break;
             // IF negative set negative bit, but Im not sure how to do that
         }
         case BCC: {
-            uint8_t operand = pc_read();
-            if (!get_carry()){
-                reg_pc += operand;
-            }
+            b(!get_carry());
             break;
         }
         case BCS: {
-            uint8_t operand = pc_read();
-            if (get_carry()){
-                reg_pc += operand;
-            }
+            b(get_carry());
             break;
         }
         case BEQ: {
-            uint8_t operand = pc_read();
-            if (get_zero()) {
-                reg_pc += operand;
-            }	
+            b(get_zero());
             break;
         }
         case BNE: {
-            uint8_t operand = pc_read();
-            if (!get_zero()) {
-                reg_pc += operand;
-            }
+            b(!get_zero());
             break;
     
         }
         case BVC: {
-            uint8_t operand = pc_read();
-            if (!get_overflow()) {
-                reg_pc += operand;
-            }
+            b(!get_overflow());
             break;
         }
         case BVS: {
-            uint8_t operand = pc_read();
-            if (get_overflow()) {
-                reg_pc += operand;
-            }
-            reg_pc += 2;
+            b(get_overflow());
             break;
         }
         case BPL: {
-            uint8_t operand = pc_read();
-            if (!get_negative()) {
-                reg_pc += operand;
-            }
+            b(!get_negative());
             break;
         }
         case BMI: {
-            uint8_t operand = pc_read();
-            if (get_negative()) {
-                reg_pc += operand;
-            }
+            b(get_negative());
             break;
         }
         case JMP_I: {
@@ -1123,9 +1117,9 @@ uint16_t CPU::execute() {
         }
         case JSR: {
             uint16_t operand = pc_read2() - 1;
-            push(operand >> 8);
-            push(operand & 0xFF);
-            reg_pc = operand + 1;	    
+            std::cout << "pc: " << reg_pc << " ";
+            push16(reg_pc - 1);
+            reg_pc = operand + 1;
             break;
         }
         case RTI: {
@@ -1134,7 +1128,9 @@ uint16_t CPU::execute() {
             break;
         }
         case RTS: {
-            reg_pc = pop16() + 1;
+            uint16_t newaddr = pop16() + 1;
+            std::cout << "new addr: " << newaddr << " ";
+            reg_pc = newaddr;
             break;
         }
         case SEC: {
@@ -1165,6 +1161,27 @@ uint16_t CPU::execute() {
             set_overflow(0);
             break;
         }
+        case PHA: {
+            push(reg_ac);
+            cycles++;
+            break;
+        }
+        case PHP: {
+            push(reg_p);
+            cycles++;
+            break;
+        }
+        case PLA: {
+            reg_ac = pop();
+            check_nz(reg_ac);
+            cycles += 2;
+            break;
+        }
+        case PLP: {
+            reg_p = pop();
+            cycles += 2;
+            break;
+        }
         case NOP:
         case NOP_2: {
             cycles++;
@@ -1178,8 +1195,9 @@ uint16_t CPU::execute() {
         // add all the other opcodes
     }
     
-    std::cout << "opcode: " << std::hex << unsigned(opcode) << std::endl;
-    std::cout << "cycles: " << unsigned(cycles) << std::endl;
+    //std::cout << "opcode: " << std::hex << unsigned(opcode) << std::endl;
+    
+    std::cout << "cycles: " << std::dec << unsigned(cycles) << std::endl;
     
     return cycles;
 }
@@ -1277,6 +1295,16 @@ void CPU::adc(uint8_t operand) {
     reg_ac = sum;
 }
 
+void CPU::b(bool condition) {
+    uint8_t operand = pc_read();
+    if (condition) {
+        cycles++;
+        uint16_t new_pc = reg_pc + operand;
+        PAGE_SHIFT(new_pc, reg_pc + 1);
+        reg_pc = new_pc;
+    }
+}
+
 void CPU::check_nz(uint8_t operand) {
     set_negative(NEGATIVE(operand));
     set_zero(ZERO(operand));
@@ -1341,34 +1369,34 @@ void CPU::mem_write(uint64_t index, uint8_t value) {
 uint8_t CPU::pc_read() {
     uint8_t data = mem_read(reg_pc);
     reg_pc++;
+    std::cout << std::hex << unsigned(data) << " ";
     return data;
 }
 
 uint16_t CPU::pc_read2() {
-    uint16_t data = mem_read2(reg_pc);
-    reg_pc += 2;
+    uint16_t data = pc_read() + (((uint16_t) pc_read()) << 8);
     return data;
 }
 
 void CPU::push(uint8_t value) {
-    memory->mem_write(((uint16_t) reg_s) + 0x100, value);
+    mem_write(((uint16_t) reg_s) + 0x100, value);
     reg_s--;
 }
 
 void CPU::push16(uint16_t value) {
-    push((uint8_t) value);
     push((uint8_t) (value >> 8));
+    push((uint8_t) value);
 }
 
 uint8_t CPU::pop() {
-    uint8_t data = (uint8_t) memory->mem_read(((uint16_t) reg_s) + 0x100);
     reg_s++;
+    uint8_t data = (uint8_t) mem_read(((uint16_t) reg_s) + 0x100);
     return data;
 }
 
 uint16_t CPU::pop16() {
-    uint16_t data = ((uint16_t) pop()) << 8;
-    data += pop();
+    uint16_t data = pop();
+    data += ((uint16_t) pop()) << 8;
     return data;
 }
 

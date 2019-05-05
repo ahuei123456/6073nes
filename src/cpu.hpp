@@ -240,6 +240,7 @@ private:
     void ldy(uint8_t operand);
     void sbc(uint8_t operand);
     void adc(uint8_t operand);
+    void b(bool condition);
     void check_nz(uint8_t operand);
     
     void page_shift(uint16_t shift, uint16_t addr);
