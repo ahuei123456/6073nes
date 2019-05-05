@@ -17,6 +17,7 @@ Mem::Mem(std::shared_ptr<ROM> game) {
             }
         }
     }
+    ppu = 
 }
 
 void Mem::set_cpu(std::shared_ptr<CPU> cpu) {
@@ -79,13 +80,19 @@ uint8_t Mem::ppu_reg_read(uint64_t index) {
         uint8_t r_val = cpu_mem[index];
         if (index == PPUSTATUS) {
             cpu_mem[index] &= 0xef;
-        } else if (index == PPUDATA) {
-            // if VRAM address is under 0x3EFF (before palettes), return contents of read buffer
+            ppu.reset_addr_latch();
+	} else if (index == PPUDATA) {
+	    ppu.update_buffer();
+            if (ppu.get_vram_addr() < 0x3EFF) {
+		r_val = ppu.get_buffer();
+	    }
+		// if VRAM address is under 0x3EFF (before palettes), return contents of read buffer
             // only updated when reading PPUDATA
             // https://wiki.nesdev.com/w/index.php/PPU_programmer_reference
         }
         
         ppu_latch = r_val;
+        return ppu_latch;
     } else {
         return ppu_latch;
     }
@@ -107,17 +114,29 @@ void Mem::ppu_reg_write(uint64_t index, uint8_t value) {
         if (index == OAMDATA) {
             cpu_mem[OAMADDR]++;
         } else if (index == PPUSCROLL) {
-            //??
+	    ppu.set_scroll_coord(value);
         } else if (index == PPUADDR) {
-            //??
+	    ppu.set_vram_addr(value);
+
         } else if (index == PPUDATA) {
-            // increment VRAM address after
+	    //Writes data to appropriate VRAM address
+            ppu_mem[ppu.get_vram_addr()] = value;
+            
+	    //This is the 2nd bit of PPUCTRL, which determines how much VRAM is incremented
+	    uint8_t incBit = (cpu_mem[PPUCTRL] >> 2) & (0x1);
+	    ppu.inc_vram_addr(incBit);
+	    // increment VRAM address after
             // but where is VRAM?
             // https://wiki.nesdev.com/w/index.php/PPU_programmer_reference
         }
     }
 }
 
+uint8_t Mem::ppu_read(uint64_t index)
+{
+    return ppu_mem[index];
+}
+
 void Mem::oam_write(uint8_t value) {
-    
+    ppu.set_oam(value);    
 }
