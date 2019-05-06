@@ -11,13 +11,19 @@ CPU::CPU(std::shared_ptr<Mem> memory) {
 
 uint16_t CPU::execute() {
     cycles = 0;
-    std::cout << std::hex << unsigned(reg_pc) << " ";
+    
+    if (reg_pc == 0xd959) {
+        cycles = 0;
+    }
+    
+    std::cout << std::setfill('0') << std::setw(4) << std::hex << unsigned(reg_pc) << " ";
     std::cout << "A: " << std::setw(2) << std::hex << unsigned(reg_ac) << " ";
     std::cout << "X: " << std::setw(2) << std::hex << unsigned(reg_x) << " ";
     std::cout << "Y: " << std::setw(2) << std::hex << unsigned(reg_y) << " ";
     std::cout << "P: " << std::setw(2) << std::hex << unsigned(reg_p) << " ";
     std::cout << "SP: " << std::setw(2) << std::hex << unsigned(reg_s) << " ";
     uint8_t opcode = pc_read();
+    
     
     switch (opcode) {
         case LDA_I: {
@@ -93,57 +99,57 @@ uint16_t CPU::execute() {
             break;
         }
         case STA_Z: {
-            sta(zp());
+            sta(a_zp());
             break;
         }
         case STA_ZX: {
-            sta(zp_x());
+            sta(a_zp_x());
             break;
         }
         case STA_A: {
-            sta(abs());
+            sta(a_abs());
             break;
         }
         case STA_AX: {
-            sta(abs_x());
+            sta(a_abs_x());
             break;
         }
         case STA_AY: {
-            sta(abs_y());
+            sta(a_abs_y());
             break;
         }
         // check over everything after this
         case STA_IX: {
-            sta(ind_x());
+            sta(a_ind_x());
             break;
         }
         case STA_IY: {
-            sta(ind_y());
+            sta(a_ind_y());
             break;
         }
         // here
         case STX_Z: {
-            stx(zp());
+            stx(a_zp());
             break;
         }
         case STX_ZY: {
-            stx(zp_y());
+            stx(a_zp_y());
             break;
         }
         case STX_A: {
-            stx(abs());
+            stx(a_abs());
             break;
         }
         case STY_Z: {
-            sty(zp());
+            sty(a_zp());
             break;
         }
         case STY_ZX: {
-            sty(zp_x());
+            sty(a_zp_x());
             break;
         }
         case STY_A: {
-            sty(abs());
+            sty(a_abs());
             break;
         }
         case TAX: {
@@ -200,35 +206,35 @@ uint16_t CPU::execute() {
             break;
         }
         case DEC_Z: {
-            dec(zp());
+            dec(a_zp());
             break;
         }
         case DEC_ZX: {
-            dec(zp_x());
+            dec(a_zp_x());
             break;
         }
         case DEC_A: {
-            dec(abs());
+            dec(a_abs());
             break;
         }
         case DEC_AX: {
-            dec(abs_x());
+            dec(a_abs_x());
             break;
         }
         case INC_Z: {
-            inc(zp());
+            inc(a_zp());
             break;
         }
         case INC_ZX: {
-            inc(zp_x());
+            inc(a_zp_x());
             break;
         }
         case INC_A: {
-            inc(abs());
+            inc(a_abs());
             break;
         }
         case INC_AX: {
-            inc(abs_x());
+            inc(a_abs_x());
             break;
         }
         case SBC_I: {
@@ -372,7 +378,6 @@ uint16_t CPU::execute() {
         // The S and V flags are set to match bits 7 and 6 respectively in the value stored at the tested address.
         
         case BIT_Z: {
-            
             uint8_t operand = zp();
             set_zero(ZERO((reg_ac & operand)));
             set_negative(operand >> 7);
@@ -650,7 +655,6 @@ uint16_t CPU::execute() {
         case BNE: {
             b(!get_zero());
             break;
-    
         }
         case BVC: {
             b(!get_overflow());
@@ -761,13 +765,45 @@ uint16_t CPU::execute() {
             break;
         }
         case NOP:
-        case NOP_2: {
+        case NOP_2: 
+        case NOP_3:
+        case NOP_4:
+        case NOP_5:
+        case NOP_6:
+        case NOP_7:
+        case NOP_8: {
+            cycles++;
+            break;
+        }
+        case NOP_B:
+        case NOP_B2:
+        case NOP_B3:
+        case NOP_B4: 
+        case NOP_B5:
+        case NOP_B6:
+        case NOP_B7:
+        case NOP_B8:
+        case NOP_B9:
+        case NOP_B10: {
+            pc_read();
+            cycles++;
+            break;
+        }
+        case NOP_C: 
+        case NOP_C2:
+        case NOP_C3:
+        case NOP_C4:
+        case NOP_C5:
+        case NOP_C6:
+        case NOP_C7: {
+            pc_read2();
             cycles++;
             break;
         }
         default: {
             std::cout << "invalid opcode: " << std::hex << unsigned(opcode) << std::endl;
             std::cout << "byte 02: " << std::hex << unsigned(memory->mem_read(2)) << std::endl;
+            std::cout << "byte 03: " << std::hex << unsigned(memory->mem_read(3)) << std::endl;
             return ERROR;
         }
         // add all the other opcodes
@@ -858,14 +894,18 @@ uint16_t CPU::a_abs_y() {
 
 uint16_t CPU::a_ind_x() {
     uint8_t operand = pc_read();
-    uint16_t address = mem_read2((uint8_t) (operand + reg_x));
+    uint8_t low = mem_read((uint8_t) (operand + reg_x));
+    uint8_t high = mem_read((uint8_t) (operand + reg_x + 1));
+    uint16_t address = low + (((uint16_t) high) << 8);
     cycles++;
     return address;
 }
 
 uint16_t CPU::a_ind_y() {
     uint8_t operand = pc_read();
-    uint16_t address = mem_read2(operand);
+    uint8_t low = mem_read(operand);
+    uint8_t high = mem_read((uint8_t) (operand + 1));
+    uint16_t address = low + (((uint16_t) high) << 8);
     uint16_t shift = address + reg_y;
     
     PAGE_SHIFT(shift, address);
@@ -976,7 +1016,7 @@ void CPU::b(bool condition) {
     uint8_t operand = pc_read();
     if (condition) {
         cycles++;
-        uint16_t new_pc = reg_pc + operand;
+        uint16_t new_pc = reg_pc + (int8_t) operand;
         PAGE_SHIFT(new_pc, reg_pc + 1);
         reg_pc = new_pc;
     }
