@@ -363,51 +363,35 @@ uint16_t CPU::execute() {
         // using the contents of a byte of memory.
 
         case AND_I: {
-            uint16_t operand = pc_read();
-            reg_ac &= (uint8_t) operand;
-            check_nz(reg_ac);
+            aan(imm());
             break;
         }
         case AND_Z: {
-            uint8_t operand = pc_read();
-            reg_ac &= (uint8_t) mem_read(operand);
-            check_nz(reg_ac);
+            aan(zp());
             break;
         }
         case AND_ZX: {
-            uint8_t operand = pc_read();
-            reg_ac &= mem_read(operand + reg_x);
-            check_nz(reg_ac);
+            aan(zp_x());
             break;
         }
         case AND_A: {
-            uint16_t operand = pc_read2();
-            reg_ac &= mem_read(operand);
-            check_nz(reg_ac);
+            aan(abs());
             break;
         }
         case AND_AX: {
-            uint16_t operand = pc_read2();
-            reg_ac &= mem_read(operand + reg_x);
-            check_nz(reg_ac);
+            aan(abs_x());
             break;
         }
         case AND_AY: {
-            uint16_t operand = pc_read2();
-            reg_ac &= mem_read(operand + reg_y);
-            check_nz(reg_ac);
+            aan(abs_y());
             break;
         }
         case AND_IX: {
-            uint16_t operand = pc_read();
-            reg_ac &= mem_read(mem_read2(operand + reg_x));
-            check_nz(reg_ac);
+            aan(ind_x());
             break;
         }
         case AND_IY: {
-            uint16_t operand = pc_read();
-            reg_ac &= mem_read(mem_read2(operand) + reg_y);
-            check_nz(reg_ac);
+            aan(ind_y());
             break;
         }
         /////////
@@ -473,93 +457,35 @@ uint16_t CPU::execute() {
         // This opcode is similar in function to AND and ORA.
 
         case EOR_I: {
-            uint16_t operand = reg_ac ^ pc_read();
-            set_negative(NEGATIVE(operand));
-            set_zero(ZERO(operand));
-
-            reg_ac = (uint8_t) operand;
+            eor(imm());
             break;
         }
         case EOR_Z: {
-            uint8_t address = pc_read();
-            uint8_t operand = reg_ac ^ mem_read(address);
-            
-            set_negative(NEGATIVE(operand));
-            set_zero(ZERO(operand));
-
-            reg_ac = (uint8_t) operand;
+            eor(zp());
             break;
         }
         case EOR_ZX: {
-            uint8_t address = pc_read();
-            uint8_t operand = reg_ac ^ mem_read(address + reg_x);
-            cycles++;
-
-            set_negative(NEGATIVE(operand));
-            set_zero(ZERO(operand));
-
-            reg_ac = (uint8_t) operand;
+            eor(zp_x());
             break;
         }
         case EOR_A: {
-            uint16_t address = pc_read2();
-            uint8_t operand = reg_ac ^ mem_read(address);
-            
-            set_negative(NEGATIVE(operand));
-            set_zero(ZERO(operand));
-
-            reg_ac = (uint8_t) operand;
+            eor(abs());
             break;
         }
         case EOR_AX: {
-            uint16_t address = pc_read2();
-            uint16_t shift = address + reg_x;
-            
-            // if adding the value of register x crosses a page boundary, take another cycle
-            PAGE_SHIFT(shift, address);
-            
-            uint8_t operand = reg_ac ^ mem_read(shift);
-            set_negative(NEGATIVE(operand));
-            set_zero(ZERO(operand));
-            reg_ac = (uint8_t) operand;
+            eor(abs_x());
             break;
         }
         case EOR_AY: {
-            uint16_t address = pc_read2();
-            uint16_t shift = address + reg_y;
-            
-            // if adding the value of register x crosses a page boundary, take another cycle
-            PAGE_SHIFT(shift, address);
-            
-            uint8_t operand = reg_ac ^ mem_read(shift);
-            set_negative(NEGATIVE(operand));
-            set_zero(ZERO(operand));
-
-            reg_ac = (uint8_t) operand;
+            eor(abs_y());
             break;
         }
         case EOR_IX: {
-            uint8_t operand = pc_read();
-            uint16_t address = mem_read2((uint8_t) (operand + reg_x));
-            uint8_t value = reg_ac ^ mem_read(address);
-            cycles++;
-            set_negative(NEGATIVE(value));
-            set_zero(ZERO(operand));
-            reg_ac = (uint8_t) value;
+            eor(ind_x());
             break;
         }
         case EOR_IY: {
-            uint8_t operand = pc_read();
-            uint16_t address = mem_read2(operand);
-            uint16_t shift = address + reg_y;
-            
-            PAGE_SHIFT(shift, address);
-            
-            uint8_t value = reg_ac ^ mem_read(address + reg_y);
-            set_negative(NEGATIVE(value));
-            set_zero(ZERO(value));
-            
-            reg_ac = (uint8_t) value;
+            eor(ind_y());
             break;
         }
         
@@ -599,93 +525,35 @@ uint16_t CPU::execute() {
         // and stores the result in the accumulator. This opcode is similar in function to AND and EOR.
         
         case ORA_I: {
-            uint16_t operand = reg_ac | pc_read();
-            set_negative(NEGATIVE(operand));
-            set_zero(ZERO(operand));
-
-            reg_ac = (uint8_t) operand;
+            ora(imm());
             break;
         }
         case ORA_Z: {
-            uint8_t address = pc_read();
-            uint8_t operand = reg_ac | mem_read(address);
-            
-            set_negative(NEGATIVE(operand));
-            set_zero(ZERO(operand));
-
-            reg_ac = (uint8_t) operand;
+            ora(zp());
             break;
         }
         case ORA_ZX: {
-            uint8_t address = pc_read();
-            uint8_t operand = reg_ac | mem_read(address + reg_x);
-            cycles++;
-
-            set_negative(NEGATIVE(operand));
-            set_zero(ZERO(operand));
-
-            reg_ac = (uint8_t) operand;
+            ora(zp_x());
             break;
         }
         case ORA_A: {
-            uint16_t address = pc_read2();
-            uint8_t operand = reg_ac | mem_read(address);
-            
-            set_negative(NEGATIVE(operand));
-            set_zero(ZERO(operand));
-
-            reg_ac = (uint8_t) operand;
+            ora(abs());
             break;
         }
         case ORA_AX: {
-            uint16_t address = pc_read2();
-            uint16_t shift = address + reg_x;
-            
-            // if adding the value of register x crosses a page boundary, take another cycle
-            PAGE_SHIFT(shift, address);
-            
-            uint8_t operand = reg_ac | mem_read(shift);
-            set_negative(NEGATIVE(operand));
-            set_zero(ZERO(operand));
-            reg_ac = (uint8_t) operand;
+            ora(abs_x());
             break;
         }
         case ORA_AY: {
-            uint16_t address = pc_read2();
-            uint16_t shift = address + reg_y;
-            
-            // if adding the value of register x crosses a page boundary, take another cycle
-            PAGE_SHIFT(shift, address);
-            
-            uint8_t operand = reg_ac | mem_read(shift);
-            set_negative(NEGATIVE(operand));
-            set_zero(ZERO(operand));
-
-            reg_ac = (uint8_t) operand;
+            ora(abs_y());
             break;
         }
         case ORA_IX: {
-            uint8_t operand = pc_read();
-            uint16_t address = mem_read2((uint8_t) (operand + reg_x));
-            uint8_t value = reg_ac | mem_read(address);
-            cycles++;
-            set_negative(NEGATIVE(value));
-            set_zero(ZERO(operand));
-            reg_ac = (uint8_t) value;
+            ora(ind_x());
             break;
         }
         case ORA_IY: {
-            uint8_t operand = pc_read();
-            uint16_t address = mem_read2(operand);
-            uint16_t shift = address + reg_y;
-            
-            PAGE_SHIFT(shift, address);
-            
-            uint8_t value = reg_ac | mem_read(address + reg_y);
-            set_negative(NEGATIVE(value));
-            set_zero(ZERO(value));
-            
-            reg_ac = (uint8_t) value;
+            ora(ind_y());
             break;
         }
 
@@ -1146,6 +1014,21 @@ void CPU::b(bool condition) {
         PAGE_SHIFT(new_pc, reg_pc + 1);
         reg_pc = new_pc;
     }
+}
+
+void CPU::ora(uint8_t operand) {
+    reg_ac |= operand;
+    check_nz(reg_ac);
+}
+
+void CPU::eor(uint8_t operand) {
+    reg_ac ^= operand;
+    check_nz(reg_ac);
+}
+
+void CPU::aan(uint8_t operand) {
+    reg_ac &= operand;
+    check_nz(reg_ac);
 }
 
 void CPU::lsr_m(uint16_t address) {

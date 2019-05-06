@@ -259,6 +259,9 @@ private:
     void adc(uint8_t operand);
     void cmp(uint8_t reg, uint8_t mem);
     void b(bool condition);
+    void ora(uint8_t operand);
+    void eor(uint8_t operand);
+    void aan(uint8_t operand);
     void lsr_m(uint16_t address);
     void asl_m(uint16_t address);
     void ror_m(uint16_t address);
