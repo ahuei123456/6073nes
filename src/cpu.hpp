@@ -123,33 +123,36 @@
 #define LSR_A   0x4E
 #define LSR_AX  0x5E
 
-#define NOP     0xEA
-#define NOP_2   0xC2
-#define NOP_3   0x1A
-#define NOP_4   0x3A
-#define NOP_5   0x5A
-#define NOP_6   0x7A
-#define NOP_7   0xDA
-#define NOP_8   0xFA
+#define NOP_11A 0xEA
+#define NOP_11B 0xC2
+#define NOP_11C 0x1A
+#define NOP_11D 0x3A
+#define NOP_11E 0x5A
+#define NOP_11F 0x7A
+#define NOP_11G 0xDA
+#define NOP_11H 0xFA
 
-#define NOP_B   0x04
-#define NOP_B2  0x44
-#define NOP_B3  0x64
-#define NOP_B4  0x80
-#define NOP_B5  0x14
-#define NOP_B6  0x34
-#define NOP_B7  0x54
-#define NOP_B8  0x74
-#define NOP_B9  0xD4
-#define NOP_B10 0xF4
+#define NOP_21A 0x80
 
-#define NOP_C   0x0C
-#define NOP_C2  0x1C
-#define NOP_C3  0x3C
-#define NOP_C4  0x5C
-#define NOP_C5  0x7C
-#define NOP_C6  0xDC
-#define NOP_C7  0xFC
+#define NOP_22A 0x04
+#define NOP_22B 0x44
+#define NOP_22C 0x64
+
+#define NOP_23A 0x14
+#define NOP_23B 0x34
+#define NOP_23C 0x54
+#define NOP_23D 0x74
+#define NOP_23E 0xD4
+#define NOP_23F 0xF4
+
+#define NOP_33A 0x0C
+
+#define NOP_34A 0x1C
+#define NOP_34B 0x3C
+#define NOP_34C 0x5C
+#define NOP_34D 0x7C
+#define NOP_34E 0xDC
+#define NOP_34F 0xFC
 
 #define ORA_I   0x09
 #define ORA_Z   0x05

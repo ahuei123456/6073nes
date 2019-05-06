@@ -12,7 +12,7 @@ CPU::CPU(std::shared_ptr<Mem> memory) {
 uint16_t CPU::execute() {
     cycles = 0;
     
-    if (reg_pc == 0xd959) {
+    if (reg_pc == 0xdb65) {
         cycles = 0;
     }
     
@@ -112,10 +112,12 @@ uint16_t CPU::execute() {
         }
         case STA_AX: {
             sta(a_abs_x());
+            cycles = 5;
             break;
         }
         case STA_AY: {
             sta(a_abs_y());
+            cycles = 5;
             break;
         }
         // check over everything after this
@@ -125,6 +127,7 @@ uint16_t CPU::execute() {
         }
         case STA_IY: {
             sta(a_ind_y());
+            cycles = 6;
             break;
         }
         // here
@@ -155,30 +158,36 @@ uint16_t CPU::execute() {
         case TAX: {
             reg_x = reg_ac;
             check_nz(reg_x);
+            cycles++;
             break;
         }
         case TAY: {
             reg_y = reg_ac;
             check_nz(reg_y);
+            cycles++;
             break;
         }
         case TSX: {
             reg_x = reg_s;
             check_nz(reg_x);
+            cycles++;
             break;
         }
         case TXA: {
             reg_ac = reg_x;
             check_nz(reg_ac);
+            cycles++;
             break;
         }
         case TXS: {
             reg_s = reg_x;
+            cycles++;
             break;
         }
         case TYA: {
             reg_ac = reg_y;
             check_nz(reg_ac);
+            cycles++;
             break;
         }
         case INX: {
@@ -219,6 +228,7 @@ uint16_t CPU::execute() {
         }
         case DEC_AX: {
             dec(a_abs_x());
+            cycles++;
             break;
         }
         case INC_Z: {
@@ -235,6 +245,7 @@ uint16_t CPU::execute() {
         }
         case INC_AX: {
             inc(a_abs_x());
+            cycles++;
             break;
         }
         case SBC_I: {
@@ -367,6 +378,7 @@ uint16_t CPU::execute() {
         }
         case ASL_AX: {
             asl_m(a_abs_x());
+            cycles++;
             break;
         }
 
@@ -459,6 +471,7 @@ uint16_t CPU::execute() {
         }
         case LSR_AX: {
             lsr_m(a_abs_x());
+            cycles++;
             break;
         }
 
@@ -528,6 +541,7 @@ uint16_t CPU::execute() {
         }
         case ROL_AX: {
             rol_m(a_abs_x());
+            cycles++;
             break;
         }
 
@@ -557,6 +571,7 @@ uint16_t CPU::execute() {
         }
         case ROR_AX: {
             ror_m(a_abs_x());
+            cycles++;
             break;
         }
         
@@ -764,40 +779,50 @@ uint16_t CPU::execute() {
             cycles += 2;
             break;
         }
-        case NOP:
-        case NOP_2: 
-        case NOP_3:
-        case NOP_4:
-        case NOP_5:
-        case NOP_6:
-        case NOP_7:
-        case NOP_8: {
+        case NOP_11A:
+        case NOP_11B:
+        case NOP_11C:
+        case NOP_11D:
+        case NOP_11E:
+        case NOP_11F:
+        case NOP_11G:
+        case NOP_11H: {
             cycles++;
             break;
         }
-        case NOP_B:
-        case NOP_B2:
-        case NOP_B3:
-        case NOP_B4: 
-        case NOP_B5:
-        case NOP_B6:
-        case NOP_B7:
-        case NOP_B8:
-        case NOP_B9:
-        case NOP_B10: {
+        case NOP_21A: {
+            pc_read();
+            break;
+        }
+        case NOP_22A:
+        case NOP_22B:
+        case NOP_22C: {
             pc_read();
             cycles++;
             break;
         }
-        case NOP_C: 
-        case NOP_C2:
-        case NOP_C3:
-        case NOP_C4:
-        case NOP_C5:
-        case NOP_C6:
-        case NOP_C7: {
+        case NOP_23A: 
+        case NOP_23B:
+        case NOP_23C:
+        case NOP_23D:
+        case NOP_23E:
+        case NOP_23F: {
+            pc_read();
+            cycles += 2;
+            break;
+        }
+        case NOP_33A: {
             pc_read2();
             cycles++;
+            break;
+        }
+        case NOP_34A: 
+        case NOP_34B:
+        case NOP_34C:
+        case NOP_34D:
+        case NOP_34E:
+        case NOP_34F: {
+            abs_x();
             break;
         }
         default: {
@@ -909,11 +934,11 @@ uint16_t CPU::a_ind_y() {
     uint16_t shift = address + reg_y;
     
     PAGE_SHIFT(shift, address);
-    
     return shift;
 }
 
 uint8_t CPU::lsr(uint8_t value) {
+    cycles++;
     set_carry(value & 1);
     value >>= 1;
     check_nz(value);
@@ -921,6 +946,7 @@ uint8_t CPU::lsr(uint8_t value) {
 }
 
 uint8_t CPU::asl(uint8_t value) {
+    cycles++;
     set_carry((value & 0x80) >> 7);
     value <<= 1;
     check_nz(value);
@@ -928,6 +954,7 @@ uint8_t CPU::asl(uint8_t value) {
 }
 
 uint8_t CPU::ror(uint8_t value) {
+    cycles++;
     bool bit_0 = (value & 1);
     value >>= 1;
     value += ((uint8_t) get_carry()) << 7;
@@ -937,6 +964,7 @@ uint8_t CPU::ror(uint8_t value) {
 }
 
 uint8_t CPU::rol(uint8_t value) {
+    cycles++;
     bool bit_7 = ((value & 0x80) >> 7);
     value <<= 1;
     value += (uint8_t) get_carry();
@@ -973,6 +1001,7 @@ void CPU::sty(uint16_t address) {
 }
 
 void CPU::dec(uint16_t address) {
+    cycles++;
     uint8_t value = mem_read(address);
     value--;
     check_nz(value);
@@ -980,6 +1009,7 @@ void CPU::dec(uint16_t address) {
 }
 
 void CPU::inc(uint16_t address) {
+    cycles++;
     uint8_t value = mem_read(address);
     value++;
     check_nz(value);
@@ -1067,7 +1097,7 @@ void CPU::check_nz(uint8_t operand) {
 }
 
 void CPU::page_shift(uint16_t shift, uint16_t addr) {
-    if ((shift >> 8 ) > (addr >> 8)) {
+    if ((shift >> 8 ) != (addr >> 8)) {
         cycles++;
     }
 }
