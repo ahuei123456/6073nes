@@ -93,81 +93,57 @@ uint16_t CPU::execute() {
             break;
         }
         case STA_Z: {
-            uint8_t address = pc_read();
-            mem_write(address, reg_ac);
+            sta(zp());
             break;
         }
         case STA_ZX: {
-            uint8_t address = pc_read();
-            mem_write(address + reg_x, reg_ac);
-            cycles++;
+            sta(zp_x());
             break;
         }
         case STA_A: {
-            uint16_t address = pc_read2();
-            mem_write(address, reg_ac);
+            sta(abs());
             break;
         }
         case STA_AX: {
-            uint16_t address = pc_read2();
-            uint16_t shift = address + reg_x;
-            PAGE_SHIFT(shift, address);
-            mem_write(shift, reg_ac);
+            sta(abs_x());
             break;
         }
         case STA_AY: {
-            uint16_t address = pc_read2();
-            uint16_t shift = address + reg_y;
-            PAGE_SHIFT(shift, address);
-            mem_write(shift, reg_ac);
+            sta(abs_y());
             break;
         }
         // check over everything after this
         case STA_IX: {
-            uint8_t operand = pc_read();
-            uint16_t address = mem_read2((uint8_t) (operand + reg_x));
-            cycles++;
-            mem_write(address, reg_ac);
+            sta(ind_x());
             break;
         }
         case STA_IY: {
-            uint8_t operand = pc_read();
-            uint16_t address = mem_read2(operand);
-            uint16_t shift = address + reg_y;
-            PAGE_SHIFT(shift, address);
-            
-            mem_write(shift, reg_ac);
+            sta(ind_y());
             break;
         }
         // here
         case STX_Z: {
-            uint16_t operand =pc_read();
-            mem_write(operand, reg_x);
+            stx(zp());
             break;
         }
         case STX_ZY: {
-            uint16_t operand = pc_read();
-            mem_write(operand+reg_y, reg_x);
+            stx(zp_y());
             break;
         }
         case STX_A: {
-            uint16_t operand = pc_read2();
-            mem_write(operand, reg_x);
+            stx(abs());
             break;
         }
         case STY_Z: {
-            uint16_t operand = pc_read();
-            mem_write(operand, reg_y);
+            sty(zp());
             break;
         }
         case STY_ZX: {
-            uint16_t operand = pc_read();
-            mem_write(operand+reg_x, reg_y);
+            sty(zp_x());
             break;
         }
         case STY_A: {
-            uint16_t operand = pc_read2();
-            mem_write(operand, reg_y);
+            sty(abs());
             break;
         }
         case TAX: {
@@ -224,71 +200,35 @@ uint16_t CPU::execute() {
             break;
         }
         case DEC_Z: {
-            uint8_t operand = pc_read();
-            uint8_t result = mem_read(operand) - 1;
-            mem_write(operand, result);
-            cycles++;
-            check_nz(result);
+            dec(zp());
             break;
         }
         case DEC_ZX: {
-            uint8_t operand = pc_read();
-            uint8_t address = operand + reg_x;
-            uint8_t result = mem_read(address) - 1;
-            mem_write(address, result);
-            cycles += 2;
-            check_nz(result);
+            dec(zp_x());
             break;
         }
         case DEC_A: {
-            uint16_t address = pc_read2();
-            uint8_t result = mem_read(address) - 1;
-            mem_write(address, result);
-            cycles++;
-            check_nz(result);
+            dec(abs());
             break;
         }
         case DEC_AX: {
-            uint16_t operand = pc_read2();
-            uint16_t address = operand + reg_x;
-            uint8_t result = mem_read(address) - 1;
-            mem_write(address, result);
-            cycles += 2;
-            check_nz(result);
+            dec(abs_x());
             break;
         }
         case INC_Z: {
-            uint8_t operand = pc_read();
-            uint8_t result = (uint8_t) mem_read(operand) + 1;
-            mem_write(operand, result);
-            cycles++;
-            check_nz(result);
+            inc(zp());
             break;
         }
         case INC_ZX: {
-            uint8_t operand = pc_read();
-            uint8_t address = operand + reg_x;
-            uint8_t result = mem_read(address) + 1;
-            mem_write(address, result);
-            cycles += 2;
-            check_nz(result);
+            inc(zp_x());
             break;
         }
         case INC_A: {
-            uint16_t address = pc_read2();
-            uint8_t result = mem_read(address) + 1;
-            mem_write(address, result);
-            cycles++;
-            check_nz(result);
+            inc(abs());
             break;
         }
         case INC_AX: {
-            uint16_t operand = pc_read2();
-            uint16_t address = operand + reg_x;
-            uint8_t result = mem_read(address) + 1;
-            mem_write(address, result);
-            cycles += 2;
-            check_nz(result);
+            inc(abs_x());
             break;
         }
         case SBC_I: {
@@ -978,6 +918,32 @@ void CPU::ldx(uint8_t operand) {
 void CPU::ldy(uint8_t operand) {
     check_nz(operand);
     reg_y = operand;
+}
+
+void CPU::sta(uint16_t address) {
+    mem_write(address, reg_ac);
+}
+
+void CPU::stx(uint16_t address) {
+    mem_write(address, reg_x);
+}
+
+void CPU::sty(uint16_t address) {
+    mem_write(address, reg_y);
+}
+
+void CPU::dec(uint16_t address) {
+    uint8_t value = mem_read(address);
+    value--;
+    check_nz(value);
+    mem_write(address, value);
+}
+
+void CPU::inc(uint16_t address) {
+    uint8_t value = mem_read(address);
+    value++;
+    check_nz(value);
+    mem_write(address, value);
 }
 
 void CPU::sbc(uint8_t operand) {

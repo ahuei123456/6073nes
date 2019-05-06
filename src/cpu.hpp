@@ -255,6 +255,11 @@ private:
     void lda(uint8_t operand);
     void ldx(uint8_t operand);
     void ldy(uint8_t operand);
+    void sta(uint16_t address);
+    void stx(uint16_t address);
+    void sty(uint16_t address);
+    void dec(uint16_t address);
+    void inc(uint16_t address);
     void sbc(uint8_t operand);
     void adc(uint8_t operand);
     void cmp(uint8_t reg, uint8_t mem);
