@@ -420,61 +420,23 @@ uint16_t CPU::execute() {
         // (ignoring 2's complement considerations), setting the carry if the result will not fit in 8 bits.
 
         case ASL_AC: {
-            set_carry(reg_ac >> 7);
-            
-            reg_ac = reg_ac << 1;
-            set_negative(NEGATIVE(reg_ac));
-            set_zero(ZERO(reg_ac));
+            reg_ac = asl(reg_ac);
             break;
         }
         case ASL_Z: {
-            uint8_t address = pc_read();
-            uint16_t operand = mem_read(address);
-
-            set_carry(operand >> 7);
-            operand = operand << 1;
-            mem_write(address, operand);
-            set_negative(NEGATIVE(operand));
-            set_zero(ZERO(operand)); 
+            asl_m(a_zp()); 
             break;
         }
         case ASL_ZX: {
-            uint8_t address = pc_read();
-            uint16_t operand = mem_read(address + reg_x);
-            cycles++;
-            set_carry(operand >> 7);
-            operand = operand << 1;
-            mem_write(address, operand);
-            set_negative(NEGATIVE(operand));
-            set_zero(ZERO(operand)); 
+            asl_m(a_zp_x());
             break;
         }
         case ASL_A: {
-            uint8_t address = pc_read2();
-            uint16_t operand = mem_read(address);
-
-            set_carry(operand >> 7);
-            //reg_ac = reg_ac << 1;
-            operand = operand << 1;
-            mem_write(address, operand);
-            set_negative(NEGATIVE(operand));
-            set_zero(ZERO(operand));
+            asl_m(a_abs());
             break;
         }
         case ASL_AX: {
-            uint16_t address = pc_read2();
-            uint16_t shift = address + reg_x;
-            
-            // if adding the value of register x crosses a page boundary, take another cycle
-            PAGE_SHIFT(shift, address);
-            
-            uint8_t operand = mem_read(shift);
-
-            set_carry(operand >> 7);
-            //reg_ac = reg_ac << 1;
-            operand = operand << 1;
-            mem_write(address, operand);
-            set_negative(NEGATIVE(operand));
+            asl_m(a_abs_x());
             break;
         }
 
@@ -609,47 +571,23 @@ uint16_t CPU::execute() {
         // The bit that was in bit 0 is shifted into the carry flag. Bit 7 is set to zero.
 
         case LSR_AC: {
-            set_carry((reg_ac << 7) >> 7);
-            reg_ac = reg_ac >> 1;
+            reg_ac = lsr(reg_ac);
             break;
         }
         case LSR_Z: {
-            uint8_t address = pc_read();
-            uint8_t operand = mem_read(address);
-            set_carry((operand << 7) >> 7);
-            operand = operand >> 1;
-            mem_write(address, operand);
+            lsr_m(a_zp());
             break;
         }
         case LSR_ZX: {
-            uint8_t address = pc_read();
-            uint8_t operand = mem_read(address + reg_x);
-            cycles++;
-            set_carry((operand << 7) >> 7);
-            operand = operand >> 1;
-            mem_write(address, operand);
+            lsr_m(a_zp_x());
             break;
         }
         case LSR_A: {
-            uint8_t address = pc_read2();
-            uint8_t operand = mem_read(address);
-            set_carry((operand << 7) >> 7);
-            operand = operand >> 1;
-            mem_write(address, operand);
+            lsr_m(a_abs());
             break;
         }
         case LSR_AX: {
-            uint16_t address = pc_read2();
-            uint16_t shift = address + reg_x;
-            
-            // if adding the value of register x crosses a page boundary, take another cycle
-            PAGE_SHIFT(shift, address);
-            
-            uint8_t operand = mem_read(shift);
-
-            set_carry((operand << 7) >> 7);
-            operand = operand >> 1;
-            mem_write(address, operand);
+            lsr_m(a_abs_x());
             break;
         }
 
@@ -759,52 +697,24 @@ uint16_t CPU::execute() {
         // The Carry is shifted into bit 0 and the original bit 7 is shifted into the Carry.
 
         case ROL_AC: {
-            uint8_t old_carry = get_carry();
-            set_carry(reg_ac >> 7);
-            reg_ac = (reg_ac << 1) | old_carry;
+            reg_ac = rol(reg_ac);
             break; 
         }
         // Change based on memory in the future
         case ROL_Z: {
-            uint8_t address = pc_read();
-            uint8_t operand = mem_read(address);
-            uint8_t old_carry = get_carry();
-            set_carry(operand >> 7);
-            operand = (operand << 1) | old_carry; 
-            mem_write(address, operand);
+            rol_m(a_zp());
             break;
         }
         case ROL_ZX: {
-            uint8_t address = pc_read();
-            uint8_t operand = mem_read(address + reg_x);
-            uint8_t old_carry = get_carry();
-            cycles++;
-            set_carry(operand >> 7);
-            operand = (operand << 1) | old_carry; 
-            mem_write(address, operand);
+            rol_m(a_zp_x());
             break;
         }
         case ROL_A: {
-            uint8_t address = pc_read2();
-            uint8_t operand = mem_read(address);
-            uint8_t old_carry = get_carry();
-            set_carry(operand >> 7);
-            operand = (operand << 1) | old_carry; 
-            mem_write(address, operand);
+            rol_m(a_abs());
             break;
         }
         case ROL_AX: {
-            uint8_t address = pc_read();
-            uint16_t shift = address + reg_x;
-            
-            // if adding the value of register x crosses a page boundary, take another cycle
-            PAGE_SHIFT(shift, address);
-            
-            uint8_t operand = mem_read(shift);
-            uint8_t old_carry = get_carry();
-            set_carry(operand >> 7);
-            operand = (operand << 1) | old_carry; 
-            mem_write(address, operand); 
+            rol_m(a_abs_x());
             break;
         }
 
@@ -816,51 +726,24 @@ uint16_t CPU::execute() {
         // Bit 7 is filled with the current value of the carry flag whilst the old bit 0 becomes the new carry flag value.
 
         case ROR_AC: {
-            uint8_t old_carry = get_carry();
-            set_carry((reg_ac << 7) >> 7);
-            reg_ac = (reg_ac >> 1) | (old_carry << 7); 
+            reg_ac = ror(reg_ac);
             break;
         }
         // Change based on memory in the future
         case ROR_Z: {
-            uint8_t address = pc_read();
-            uint8_t operand = mem_read(address);
-            uint8_t old_carry = get_carry();
-            set_carry((operand << 1) >> 7);
-            operand = (operand >> 1) | (old_carry << 7); 
-            mem_write(address, operand);
+            ror_m(a_zp());
             break;
         }
         case ROR_ZX: {
-            uint8_t address = pc_read();
-            uint8_t operand = mem_read(address + reg_x);
-            cycles++;
-            uint8_t old_carry = get_carry();
-            set_carry((operand << 1) >> 7);
-            operand = (operand >> 1) | (old_carry << 7); 
-            mem_write(address, operand);
+            ror_m(a_zp_x());
             break;
         }
         case ROR_A: {
-            uint8_t address = pc_read2();
-            uint8_t operand = mem_read(address);
-            uint8_t old_carry = get_carry();
-            set_carry((operand << 1) >> 7);
-            operand = (operand >> 1) | (old_carry << 7); 
-            mem_write(address, operand);
+            ror_m(a_abs());
             break;
         }
         case ROR_AX: {
-            uint16_t address = pc_read2();
-            uint16_t shift = address + reg_x;
-            
-            // if adding the value of register x crosses a page boundary, take another cycle
-            PAGE_SHIFT(shift, address);
-            uint8_t operand = mem_read(shift);
-            uint8_t old_carry = get_carry();
-            set_carry((operand << 1) >> 7);
-            operand = (operand >> 1) | (old_carry << 7); 
-            mem_write(address, operand);
+            ror_m(a_abs_x());
             break;
         }
         
@@ -1098,64 +981,119 @@ uint8_t CPU::imm() {
 }
 
 uint8_t CPU::zp() {
-    uint8_t address = pc_read();
-    return mem_read(address);
+    return mem_read(a_zp());
 }
 
 uint8_t CPU::zp_x() {
-    uint8_t address = pc_read();
-    cycles++;
-    return mem_read(address + reg_x);
+    return mem_read(a_zp_x());
 }
 
 uint8_t CPU::zp_y() {
-    uint8_t address = pc_read();
-    cycles++;
-    return mem_read(address + reg_y);
+    return mem_read(a_zp_y());
 }
 
 uint8_t CPU::abs() {
-    uint16_t address = pc_read2();
-    return mem_read(address);
+    return mem_read(a_abs());
 }
 
 uint8_t CPU::abs_x() {
+    return mem_read(a_abs_x());
+}
+
+uint8_t CPU::abs_y() {
+    return mem_read(a_abs_y());
+}
+
+uint8_t CPU::ind_x() {
+    return mem_read(a_ind_x());
+}
+
+uint8_t CPU::ind_y() {
+    return mem_read(a_ind_y());
+}
+
+uint8_t CPU::a_zp() {
+    return pc_read();
+}
+
+uint8_t CPU::a_zp_x() {
+    cycles++;
+    return pc_read() + reg_x;
+}
+
+uint8_t CPU::a_zp_y() {
+    cycles++;
+    return pc_read() + reg_y;
+}
+
+uint16_t CPU::a_abs() {
+    return pc_read2();
+}
+
+uint16_t CPU::a_abs_x() {
     uint16_t address = pc_read2();
     uint16_t shift = address + reg_x;
     
     // if adding the value of register x crosses a page boundary, take another cycle
     PAGE_SHIFT(shift, address);
-    return mem_read(shift);
+    return shift;
 }
 
-uint8_t CPU::abs_y() {
+uint16_t CPU::a_abs_y() {
     uint16_t address = pc_read2();
     uint16_t shift = address + reg_y;
     
     // if adding the value of register x crosses a page boundary, take another cycle
     PAGE_SHIFT(shift, address);
-    
-    return mem_read(shift);
+    return shift;
 }
 
-uint8_t CPU::ind_x() {
+uint16_t CPU::a_ind_x() {
     uint8_t operand = pc_read();
     uint16_t address = mem_read2((uint8_t) (operand + reg_x));
-    uint8_t value = mem_read(address);
     cycles++;
-    
-    return value;
+    return address;
 }
 
-uint8_t CPU::ind_y() {
+uint16_t CPU::a_ind_y() {
     uint8_t operand = pc_read();
     uint16_t address = mem_read2(operand);
     uint16_t shift = address + reg_y;
     
     PAGE_SHIFT(shift, address);
     
-    uint8_t value = mem_read(shift);
-    
+    return shift;
+}
+
+uint8_t CPU::lsr(uint8_t value) {
+    set_carry(value & 1);
+    value >>= 1;
+    check_nz(value);
+    return value;
+}
+
+uint8_t CPU::asl(uint8_t value) {
+    set_carry((value & 0x80) >> 7);
+    value <<= 1;
+    check_nz(value);
+    return value;
+}
+
+uint8_t CPU::ror(uint8_t value) {
+    bool bit_0 = (value & 1);
+    value >>= 1;
+    value += ((uint8_t) get_carry()) << 7;
+    set_carry(bit_0);
+    check_nz(value);
+    return value;
+}
+
+uint8_t CPU::rol(uint8_t value) {
+    bool bit_7 = ((value & 0x80) >> 7);
+    value <<= 1;
+    value += (uint8_t) get_carry();
+    set_carry(bit_7);
+    check_nz(value);
     return value;
 }
 
@@ -1208,6 +1146,30 @@ void CPU::b(bool condition) {
         PAGE_SHIFT(new_pc, reg_pc + 1);
         reg_pc = new_pc;
     }
+}
+
+void CPU::lsr_m(uint16_t address) {
+    uint8_t value = mem_read(address);
+    value = lsr(value);
+    mem_write(address, value);
+}
+
+void CPU::asl_m(uint16_t address) {
+    uint8_t value = mem_read(address);
+    value = asl(value);
+    mem_write(address, value);
+}
+
+void CPU::ror_m(uint16_t address) {
+    uint8_t value = mem_read(address);
+    value = ror(value);
+    mem_write(address, value);
+}
+
+void CPU::rol_m(uint16_t address) {
+    uint8_t value = mem_read(address);
+    value = rol(value);
+    mem_write(address, value);
 }
 
 void CPU::check_nz(uint8_t operand) {

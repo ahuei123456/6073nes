@@ -224,7 +224,7 @@ private:
     // status register
     uint8_t reg_p;
     
-    // addressing modes
+    // addressing modes (get operand)
     uint8_t imm();
     uint8_t zp();
     uint8_t zp_x();
@@ -235,6 +235,22 @@ private:
     uint8_t ind_x();
     uint8_t ind_y();
     
+    // addressing modes (get address)
+    uint8_t a_zp();
+    uint8_t a_zp_x();
+    uint8_t a_zp_y();
+    uint16_t a_abs();
+    uint16_t a_abs_x();
+    uint16_t a_abs_y();
+    uint16_t a_ind_x();
+    uint16_t a_ind_y();
+    
+    // shifts
+    uint8_t lsr(uint8_t value);
+    uint8_t asl(uint8_t value);
+    uint8_t ror(uint8_t value);
+    uint8_t rol(uint8_t value);
+    
     // instructions
     void lda(uint8_t operand);
     void ldx(uint8_t operand);
@@ -243,6 +259,11 @@ private:
     void adc(uint8_t operand);
     void cmp(uint8_t reg, uint8_t mem);
     void b(bool condition);
+    void lsr_m(uint16_t address);
+    void asl_m(uint16_t address);
+    void ror_m(uint16_t address);
+    void rol_m(uint16_t address);
+    
     void check_nz(uint8_t operand);
     
     void page_shift(uint16_t shift, uint16_t addr);
