@@ -3,7 +3,7 @@
 Mem::Mem(std::shared_ptr<ROM> game) {
     if (game->get_mapper() == 0) {
         uint64_t size = game->get_prg_size();
-        std::cout << "Memory mapper 0" << std::endl << "CHR size: " << size << " bytes" << std::endl;
+        //std::cout << "Memory mapper 0" << std::endl << "CHR size: " << size << " bytes" << std::endl;
         if (size == NROM_128) {
             for (int i = 0; i < NROM_128; i++) {
                 uint8_t byte = game->get_prg(i);

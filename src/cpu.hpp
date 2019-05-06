@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <memory>
 
@@ -240,6 +241,7 @@ private:
     void ldy(uint8_t operand);
     void sbc(uint8_t operand);
     void adc(uint8_t operand);
+    void cmp(uint8_t reg, uint8_t mem);
     void b(bool condition);
     void check_nz(uint8_t operand);
     
@@ -247,7 +249,7 @@ private:
     
     void set_negative(bool value);
     void set_overflow(bool value);
-    
+    void set_one(bool value);
     void set_break(bool value);
     void set_decimal(bool value);
     void set_interrupt(bool value);
@@ -256,6 +258,7 @@ private:
     
     // cycle stuff
     uint8_t cycles;
+    uint64_t total_cycles;
     
     // clocked events
     uint8_t mem_read(uint64_t index);
