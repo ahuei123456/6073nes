@@ -24,7 +24,6 @@ uint16_t CPU::execute() {
     std::cout << "SP: " << std::setw(2) << std::hex << unsigned(reg_s) << " ";
     uint8_t opcode = pc_read();
     
-    
     switch (opcode) {
         case LDA_I: {
             lda(imm());
@@ -1235,6 +1234,6 @@ uint16_t CPU::get_pc() {
     return reg_pc;
 }
 
-uint8_t CPU:: get_s() {
+uint8_t CPU::get_s() {
     return reg_s;
 }
