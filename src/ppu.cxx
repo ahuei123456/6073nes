@@ -397,26 +397,26 @@ uint8_t PPU::sprite_byte(Sprite sprite, uint8_t index) {
 
 void PPU::sprite_eval() {
 //This function is responsible for placing sprites into secondary OAM and filling the sprite data latches to be used in sprite evaluation for the next scanline.
-     if (cycle_modulo_341 <= 1 && cycle_modulo_341 >= 64) {
-	 switch (cycle_modulo_8) {
+     if (cycle_mod_341 <= 1 && cycle_mod_341 >= 64) {
+	 switch (cycle_mod_8) {
 		//Even cycles write 0xFF to secondary OAM
 		case 2: {
-		      oam_sec[(cycle_modulo_341 - 1) / 8].y = 0xFF;
+		      oam_sec[(cycle_mod_341 - 1) / 8].y = 0xFF;
 		      break;
 		}
 
 	        case 4: {
-		      oam_sec[(cycle_modulo_341 - 1) / 8].index = 0xFF;
+		      oam_sec[(cycle_mod_341 - 1) / 8].index = 0xFF;
 	              break;
 		}
 
 		case 6: {
-		      oam_sec[(cycle_modulo_341 - 1) / 8].attributes = 0xFF;
+		      oam_sec[(cycle_mod_341 - 1) / 8].attributes = 0xFF;
 		      break;
 		}
 
 		case 0: {
-		      oam_sec[(cycle_modulo_341 - 1) / 8].X = 0xFF;
+		      oam_sec[(cycle_mod_341 - 1) / 8].X = 0xFF;
 		      break;
 		}
 
@@ -428,11 +428,11 @@ void PPU::sprite_eval() {
 	 return;
      }
 
-     else if (cycle_modulo_341 >= 65 && cycle_modulo_341 <= 256) {
+     else if (cycle_mod_341 >= 65 && cycle_mod_341 <= 256) {
 	 //These cycles fill up secondary OAM with new data
 	 
 
-	 if (cycle_modulo_8 % 2 == 0) {
+	 if (cycle_mod_8 % 2 == 0) {
 
 	      if (in_range && oam_sec_full) {
 		   //Set sprite overflow flag and read next 3 entries of OAM
@@ -476,10 +476,10 @@ void PPU::sprite_eval() {
 
      }
 
-     else if (cycle_modulo_341 >= 257 && cycle_modulo_341 <= 320) {
+     else if (cycle_mod_341 >= 257 && cycle_mod_341 <= 320) {
 	 
-	 uint8_t sprite_num = (cycle_modulo_341 - 257) / 8;
-	 switch (cycle_modulo_8) {
+	 uint8_t sprite_num = (cycle_mod_341 - 257) / 8;
+	 switch (cycle_mod_8) {
 		case 0: {
 			sprite_y_latch = oam_sec[sprite_num].Y;
 		        break;	
