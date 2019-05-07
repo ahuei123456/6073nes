@@ -55,10 +55,9 @@ private:
     std::array<uint8_t, SPRITES_SEC> sprite_x;
     uint8_t attribute_byte_1, attribute_byte_2;
     uint16_t background_bitmap_1, background_bitmap_2;
-    //Positions for upper left corner of screen
-    uint8_t scroll_x;
-    uint8_t scroll_y;
+    
     uint8_t fine_x;
+    uint8_t temp_fine_x;
 
     //Determines whether x or y coordinate is set next. If false, x-coordinate. If true, y-coordinate.
     bool addr_latch = false;
@@ -69,19 +68,22 @@ private:
     uint8_t sprite_y_latch;
 
     //Variables used to keep track of where we are in cycles/scanlines.
-    uint8_t current_scanline = -1;
+    uint16_t current_scanline = 261;
     uint8_t cycle_mod_8 = 0;
     uint8_t cycle_mod_341 = 0;
 
     uint8_t nametable_byte;
     bool sprite_foreground;
+    uint8_t attribute_byte;
 
     std::array<std::array<uint8_t, 256>, 240> pixel_array;
 
 public:
     PPU(std::shared_ptr<Mem> memory);
     void set_reg(uint64_t index, uint8_t value);
-   
+
+    uint8_t read_reg(uint64_t index);
+
     void set_oam(uint8_t byte);
 
     void set_vram_addr(uint8_t value);
@@ -98,6 +100,8 @@ public:
 
     void reset_addr_latch();
 
+    void decrement_sprite_counter();	
+
     void fill_next_pixel();
 
     void fill_sprite_bitmaps();
@@ -105,6 +109,8 @@ public:
     void fill_first_tiles();	
 
     void background_eval();
+
+    uint8_t sprite_byte(Sprite sprite, uint8_t index);
 
     void sprite_eval();
 

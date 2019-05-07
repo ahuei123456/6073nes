@@ -30,6 +30,7 @@
 
 #define PATTERN_TABLE   0x1000
 #define NAMETABLE       0x400
+#define PALETTE         0x3
 
 #define PPU_START       0x2000
 #define PPUCTRL         0x2000
@@ -43,6 +44,7 @@
 #define OAMDMA          0x4014
 
 #define VALID_PPU_INDEX(index) (index >= 0x2000 && index <= 0x3FFF)
+#define VALID_PPU_MEM_INDEX(index) (index >= 0 && index <= 0x3FFF)
 #define ACTUAL_PPU_REGISTER(index) ((index - 0x2000) % 8 + 0x2000)
 #define PPU_REGISTER_WRITABLE(index) (!(index == 0x2002))
 #define PPU_REGISTER_READABLE(index) (index == 0x2002 || index == 0x2004 || index == 0x2007)
@@ -53,9 +55,7 @@ class PPU;
 
 class Mem {
 private:
-    PPU ppu;    
     std::array<uint8_t, CPU_MEM_SIZE> cpu_mem;
-    std::array<uint8_t, PPU_MEM_SIZE> ppu_mem;
     
     // cpu
     std::shared_ptr<CPU> cpu;
@@ -67,7 +67,10 @@ private:
     std::array<uint8_t, PATTERN_TABLE> left;
     std::array<uint8_t, PATTERN_TABLE> right;
     std::array<std::array<uint8_t, NAMETABLE>, 4> nametables;
-    
+    std::array<std::array<uint8_t, PALETTE>, 4> back_palettes;
+    std::array<std::array<uint8_t, PALETTE>, 4> sprite_palettes;
+    uint8_t univ_back_color;
+
     // ppu stuff accessible by cpu
     uint8_t ppu_reg_read(uint64_t index);
     void ppu_reg_write(uint64_t index, uint8_t value);

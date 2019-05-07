@@ -16,8 +16,7 @@ Mem::Mem(std::shared_ptr<ROM> game) {
                 prg_rom[i] = byte;
             }
         }
-    }
-    ppu = 
+    } 
 }
 
 void Mem::set_cpu(std::shared_ptr<CPU> cpu) {
@@ -77,14 +76,14 @@ uint8_t Mem::ppu_reg_read(uint64_t index) {
     index = ACTUAL_PPU_REGISTER(index);
     
     if (PPU_REGISTER_READABLE(index)) {
-        uint8_t r_val = cpu_mem[index];
+        uint8_t r_val = ppu->read_reg(index % 8);
         if (index == PPUSTATUS) {
-            cpu_mem[index] &= 0xef;
-            ppu.reset_addr_latch();
+            ppu->set_reg(index % 8, r_val &= 0xEF);
+            ppu->reset_addr_latch();
 	} else if (index == PPUDATA) {
-	    ppu.update_buffer();
-            if (ppu.get_vram_addr() < 0x3EFF) {
-		r_val = ppu.get_buffer();
+	    ppu->update_buffer();
+            if (ppu->get_vram_addr() < 0x3EFF) {
+		r_val = ppu->get_buffer();
 	    }
 		// if VRAM address is under 0x3EFF (before palettes), return contents of read buffer
             // only updated when reading PPUDATA
@@ -110,21 +109,22 @@ void Mem::ppu_reg_write(uint64_t index, uint8_t value) {
     ppu_latch = value;
     if (PPU_REGISTER_WRITABLE(index)) {
         cpu_mem[index] = value;
-        
+    	ppu->set_reg(index % 8, value);
+
         if (index == OAMDATA) {
             cpu_mem[OAMADDR]++;
         } else if (index == PPUSCROLL) {
-	    ppu.set_scroll_coord(value);
+	    ppu->set_scroll_coord(value);
         } else if (index == PPUADDR) {
-	    ppu.set_vram_addr(value);
+	    ppu->set_vram_addr(value);
 
         } else if (index == PPUDATA) {
 	    //Writes data to appropriate VRAM address
-            ppu_mem[ppu.get_vram_addr()] = value;
+            ppu_write(ppu->get_vram_addr(), value);
             
 	    //This is the 2nd bit of PPUCTRL, which determines how much VRAM is incremented
 	    uint8_t incBit = (cpu_mem[PPUCTRL] >> 2) & (0x1);
-	    ppu.inc_vram_addr(incBit);
+	    ppu->inc_vram_addr(incBit);
 	    // increment VRAM address after
             // but where is VRAM?
             // https://wiki.nesdev.com/w/index.php/PPU_programmer_reference
@@ -134,9 +134,120 @@ void Mem::ppu_reg_write(uint64_t index, uint8_t value) {
 
 uint8_t Mem::ppu_read(uint64_t index)
 {
-    return ppu_mem[index];
+    if (!VALID_PPU_MEM_INDEX(index)) {
+	throw std::out_of_range("attempted to read from an invalid ppu memory address!");
+    }
+
+    if (index >= 0x3000 && index <= 0x3EFF) {
+    //Addresses in this range are mirrors of the nametable addresses.
+	index -= 0x1000;
+    }
+
+    else if (index >= 0x3F20 && index <= 0x3FFF) {
+    //Addresses in this range are mirrors of the palette RAM addresses.
+   	index = 0x3F00 + (index % 0x20);
+    }
+
+    //Now we find the corresponding area of memory the address belongs to and calculate the index to return.
+
+    if (index >= 0 && index < 0x1000) {
+	return left[index];
+    }
+
+    else if (index < 0x2000) {
+	return right[index % 0x1000];
+    }
+
+    else if (index < 0x2400) {
+	return nametables[0][index % 0x400]; 
+    }
+
+    else if (index < 0x2800) {
+	return nametables[1][index % 0x400];
+    }
+
+    else if (index < 0x2C00) {
+	return nametables[2][index % 0x400];
+    }
+
+    else if (index < 0x3000) {
+	return nametables[3][index % 0x400];
+    }
+
+    else if (index >= 0x3F00 && index < 0x3F20) {
+	uint8_t palette_num = (index % 0xF) / 4;
+	uint8_t color_num = (index % 4);
+	if (color_num == 0) {
+	     return univ_back_color;
+        }
+
+	if (index < 0x3F10) {
+	     return back_palettes[palette_num][color_num - 1];
+	}
+
+	else {
+	     return sprite_palettes[palette_num][color_num - 1];
+	}	
+    }
+
+}
+
+uint8_t Mem::ppu_write(uint64_t index, uint8_t value) {
+    if (!VALID_PPU_MEM_INDEX(index)) {
+	throw std::out_of_range("Tried to write to invalid ppu memory address!");
+    }
+
+    if (index >= 0x3000 && index <= 0x3FFF) {
+	index -= 0x1000;
+    }
+
+    else if (index >= 0x3F20 && index <= 0x3FFF) {
+	index = 0x3F00 + (index % 0x20);	
+    }
+
+    if (index < 0x1000) {
+	left[index] = value;
+    }
+
+    else if (index < 0x2000) {
+	right[index % 0x1000] = value;
+    }
+
+    else if (index < 0x2400) {
+	nametables[0][index % 0x400] = value;
+    }
+
+    else if (index < 0x2800) {
+	nametables[1][index % 0x400] = value;
+    }
+
+    else if (index < 0x2C00) {
+	nametables[2][index % 0x400] = value;
+    }
+
+    else if (index < 0x3000) {
+	nametables[3][index % 0x400] = value;
+    }
+
+    else if (index >= 0x3F00 && index < 0x3F20) {
+	uint8_t palette_num = (index % 0x10) / 4;
+        uint8_t color_num = (index % 4);
+	if (color_num == 0) {
+	     univ_back_color = value;	
+        }	
+
+	else {
+	     if (index < 0x3F10) {
+		  back_palettes[palette_num][color_num - 1] = value;
+	     }
+
+	     else {
+		  sprite_palettes[palette_num][color_num - 1] = value;
+	     }
+        }
+    }
 }
 
 void Mem::oam_write(uint8_t value) {
-    ppu.set_oam(value);    
+    ppu->set_oam(value);    
 }
