@@ -34,10 +34,10 @@ void PPU::set_oam(uint8_t byte) {
     for (int i = 0; i < 0xFF; i+= 4)
     {//Each sprite has 4 bytes of data. We fill the 64 sprites in.
 	 int sprite_index = i / 4;
-	 oam[sprite_index]::Y = memory::mem_read(word_addr);
-	 oam[sprite_index]::index = memory::mem_read(word_addr + 1);
-	 oam[sprite_index]::attributes = memory::mem_read(word_addr + 2);
-	 oam[sprite_index]::X = memory::mem_read(word_addr + 3);
+	 oam[sprite_index].Y = memory->mem_read(word_addr);
+	 oam[sprite_index].index = memory->mem_read(word_addr + 1);
+	 oam[sprite_index].attributes = memory->mem_read(word_addr + 2);
+	 oam[sprite_index].X = memory->mem_read(word_addr + 3);
     }
 }
 
@@ -91,7 +91,7 @@ uint8_t PPU::get_buffer() {
 }
 
 void PPU::update_buffer() {
-    read_buffer = ppu_read(vram_addr);
+    read_buffer = memory->ppu_read(vram_addr);
 }
 
 void PPU::reset_addr_latch() {
@@ -100,78 +100,76 @@ void PPU::reset_addr_latch() {
 }
 
 void PPU::decrement_sprite_counter() {
-
-    for (int i = 0; i < SPRITE_SEC; i++) {
+    for (int i = 0; i < SPRITES_SEC; i++) {
 	if (sprite_x[i] != 0) {
 	     sprite_x[i]--;
         }
     }
 }
 
-uint8_t PPU::get_sprite_pixel {
+uint8_t PPU::get_sprite_pixel() {
 //This function gets the next sprite pixel to be used for comparison with the background pixel when deciding the next pixel to display.
-     uint8_t return_pixel;
-     for (int i = 0; i < SPRITE_SEC; i++) {
-	   uint8_t color = (sprite_bitmap_low >> 7) + (sprite_bitmap_high >> 7) * 2;
-	   if (sprite_x == 0 && color != 0) {
-		  return_pixel = memory->ppu_read(0x3F10 + 4 * (sprite_attributes[i] % 4) + color);
-	          sprite_foreground = (((sprite_attributes[i] >> 5) & 0x1) == 1)
-		  return return_pixel;
-	   }	   
-     }
-
+    uint8_t return_pixel;
+    for (int i = 0; i < SPRITES_SEC; i++) {
+        uint8_t color = (sprite_bitmap_low[i] >> 7) + (sprite_bitmap_high[i] >> 7) * 2;
+        if (sprite_x[i] == 0 && color != 0) {
+            return_pixel = memory->ppu_read(0x3F10 + 4 * (sprite_attributes[i] % 4) + color);
+            sprite_foreground = (((sprite_attributes[i] >> 5) & 0x1) == 1);
+            return return_pixel;
+        }	   
+    }
 }
 
-void PPU::fill_next_pixel {
+void PPU::fill_next_pixel() {
 //This function fills in the next pixel in the grid.
-      uint8_t color = (tile_bitmap_1 >> (8 + fine_x) & 0x1) << 1 + ((tile_bitmap_1 >> fine_x) & 0x1);
-      uint8_t palette_attribute;
-      uint8_t coarse_x = vram_addr % 32;
-      uint8_t coarse_y = (vram_addr >> 5) % 32;
+     uint8_t color = (tile_bitmap_1 >> (8 + fine_x) & 0x1) << 1 + ((tile_bitmap_1 >> fine_x) & 0x1);
+     uint8_t palette_attribute;
+     uint8_t coarse_x = vram_addr % 32;
+     uint8_t coarse_y = (vram_addr >> 5) % 32;
 
-      switch (coarse_y * 2 + coarse_x) {
-	    case 0: {
-		 palette_attribute = attribute_byte_1 & 0x3;
-		 break;
-	    }
+     switch (coarse_y * 2 + coarse_x) {
+	   case 0: {
+	 palette_attribute = attribute_byte_1 & 0x3;
+	 break;
+	   }
 
-	    case 1: {
-		 palette_attribute = (attribute_byte_1 >> 2) & 0x3;
-		 break;
-	    }
+	   case 1: {
+	 palette_attribute = (attribute_byte_1 >> 2) & 0x3;
+	 break;
+	   }
 
-	    case 2: {
-		 palette_attribute = (attribute_byte_1 >> 4) & 0x3;
-		 break;
-	    }
+	   case 2: {
+	 palette_attribute = (attribute_byte_1 >> 4) & 0x3;
+	 break;
+	   }
 
-	    case 3: {
-		 palette_attribute = (attribute_byte_1 >> 6) & 0x3;
-		 break;
-	    }
-       }
+	   case 3: {
+	 palette_attribute = (attribute_byte_1 >> 6) & 0x3;
+	 break;
+	   }
+      }
 	
-       uint8_t background_pixel = memory->ppu_read(0x3F00 + 4 * palette_attribute + color);
-       uint8_t sprite_pixel = get_sprite_pixel();	
-      	
-       if (sprite_foreground || background_pixel == 0) {
-	     pixel_array[current_scanline][cycle_mod_341] = sprite_pixel;
-       }
+      uint8_t background_pixel = memory->ppu_read(0x3F00 + 4 * palette_attribute + color);
+      uint8_t sprite_pixel = get_sprite_pixel();	
+     	
+      if (sprite_foreground || background_pixel == 0) {
+	    pixel_array[current_scanline][cycle_mod_341] = sprite_pixel;
+      }
 
-       else {
-             pixel_array[current_scanline][cycle_mod_341] = background_pixel;
-       }
+      else {
+            pixel_array[current_scanline][cycle_mod_341] = background_pixel;
+      }
 
-       if (sprite_pixel != 0 && background_pixel != 0) {
-       //Sets sprite 0 hit flag to 1.
-	     memory->ppu_reg_write(0x2002, memory->ppu_reg_read(0x2002) | 0x40);
-       }
+      if (sprite_pixel != 0 && background_pixel != 0) {
+      //Sets sprite 0 hit flag to 1.
+	    memory->ppu_reg_write(0x2002, memory->ppu_reg_read(0x2002) | 0x40);
+      }
 
 
-      
+     
 }
 
-void PPU::fill_sprite_bitmaps {
+void PPU::fill_sprite_bitmaps() {
 //This function is responsible for filling the bitmaps for the sprites to be used on the next scanline.
 
 	uint8_t sprite_num = (cycle_mod_341 - 257) % 257; 
@@ -229,7 +227,7 @@ void PPU::fill_sprite_bitmaps {
 }
 
 
-void PPU::fill_first_tiles {
+void PPU::fill_first_tiles() {
 	if (cycle_mod_341 == 321) {
 	//Nasty calculations to adjust temp_vram_address with the new scanline.
 		uint16_t temp_coarse_y = (temp_vram_addr >> 5) % 32;
@@ -543,7 +541,7 @@ void PPU::execute() {
 
 void PPU::display() {
 //This function uses the SDL2 library to display the pixel array in a window.
-
+    
 }
 
 

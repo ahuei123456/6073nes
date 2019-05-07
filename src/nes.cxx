@@ -14,6 +14,20 @@ NES::NES(const char* filename) {
     memory->set_ppu(ppu);
     
     prev = std::chrono::high_resolution_clock::now();
+    
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        throw std::runtime_error(SDL_GetError());
+    } 
+    
+    window = std::shared_ptr<SDL_Window>(SDL_CreateWindow("6073NES", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN), SDL_DestroyWindow);
+    if (window == NULL) {
+        throw std::runtime_error(SDL_GetError());
+    }
+    
+    screen = std::shared_ptr<SDL_Surface>(SDL_GetWindowSurface(window.get()), SDL_FreeSurface);
+    
+    SDL_FillRect(screen.get(), NULL, SDL_MapRGB(screen->format, 0xFF, 0xFF, 0xFF));
+    SDL_UpdateWindowSurface(window.get());
 }
 
 void NES::run() {

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <memory>
 #include <chrono>
+#include <SDL.h>
 
 #include "rom.hpp"
 #include "cpu.hpp"
@@ -13,6 +14,9 @@
 
 #define CYCLE_TIME      559
 #define CYCLE_LITERAL   558.730073590338
+
+#define WIDTH           256
+#define HEIGHT          240
 
 class ROM;
 class CPU;
@@ -30,6 +34,10 @@ private:
     int64_t cycles_until_ppu;
     
     std::chrono::high_resolution_clock::time_point prev;
+    
+    // SDL
+    std::shared_ptr<SDL_Window> window;
+    std::shared_ptr<SDL_Surface> screen;
     
 public:
     NES(const char* filename);

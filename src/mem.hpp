@@ -53,7 +53,6 @@ class PPU;
 
 class Mem {
 private:
-    PPU ppu;    
     std::array<uint8_t, CPU_MEM_SIZE> cpu_mem;
     std::array<uint8_t, PPU_MEM_SIZE> ppu_mem;
     
@@ -69,8 +68,6 @@ private:
     std::array<std::array<uint8_t, NAMETABLE>, 4> nametables;
     
     // ppu stuff accessible by cpu
-    uint8_t ppu_reg_read(uint64_t index);
-    void ppu_reg_write(uint64_t index, uint8_t value);
     uint8_t ppu_latch;
     void oam_write(uint8_t value);
     
@@ -90,6 +87,8 @@ public:
     // ppu only methods
     uint8_t ppu_read(uint64_t index);
     uint8_t ppu_write(uint64_t index, uint8_t value);
+    uint8_t ppu_reg_read(uint64_t index);
+    void ppu_reg_write(uint64_t index, uint8_t value);
 };
 
 #endif
