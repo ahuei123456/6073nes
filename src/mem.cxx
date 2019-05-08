@@ -23,7 +23,9 @@ Mem::Mem(std::shared_ptr<ROM> game) {
             left[i] = game->get_prg(i);
             right[i] = game->get_prg(i + PATTERN_TABLE);
         }
-    } 
+    }
+    
+    strobe = true;
 }
 
 void Mem::set_cpu(std::shared_ptr<CPU> cpu) {
@@ -49,6 +51,17 @@ uint8_t Mem::mem_read(uint64_t index) {
         return ppu_reg_read(index);
     } else if (VALID_ROM_INDEX(index)) {
         return prg_rom[ACTUAL_ROM_ADDRESS(index)];
+    } else if (index == JOYSTICK_1) {
+        if (reading && button < 8) {
+            return pressed[button];
+            button++;
+        } else if (reading && button >= 8) {
+            return 1;
+        } else if (strobe) {
+            return pressed[NES_A];
+        } else {
+            return 0;
+        }
     } else {
         // placeholder
         return 0;
@@ -70,6 +83,9 @@ void Mem::mem_write(uint64_t index, uint8_t value) {
         ppu_reg_write(index, value);
     } else if (index == OAMDMA) {
         oam_write(value);
+    } else if (index == JOYSTICK_1) {
+        reading = !(strobe && value);
+        strobe = value;
     }
 }
 
@@ -236,4 +252,12 @@ uint8_t Mem::ppu_write(uint64_t index, uint8_t value) {
 
 void Mem::oam_write(uint8_t value) {
     ppu->set_oam(value);    
+}
+
+void Mem::button_press(uint8_t button) {
+    pressed[button] = true;
+}
+
+void Mem::button_release(uint8_t button) {
+    pressed[button] = false;
 }

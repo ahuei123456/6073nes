@@ -3,6 +3,7 @@
 NES::NES(const char* filename) {
     cycles = 0;
     cycles_until_ppu = 3;
+    event = new SDL_Event;
     
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         throw std::runtime_error(SDL_GetError());
@@ -54,6 +55,8 @@ void NES::ppu_run() {
 }
 
 void NES::execute() {
+    poll_input();
+    
     if (cycles_until_ppu <= 0) {
         ppu->execute();
         cycles_until_ppu += 3;
@@ -68,6 +71,151 @@ void NES::execute() {
         cycles_until_ppu -= passed;
     }
     
+}
+
+void NES::poll_input() {
+    SDL_PollEvent(event);
+    
+    if (event->type == SDL_KEYDOWN) {
+        uint64_t kdown = event->key.keysym.sym;
+        switch (kdown) {
+             case SDLK_UP: {
+                 if (!kstate[NES_UP]) {
+                     std::cout << "press up" << std::endl;
+                     memory->button_press(NES_UP);
+                     kstate[NES_UP] = true;
+                 }
+                 break;
+             }
+             case SDLK_DOWN: {
+                 if (!kstate[NES_DOWN]) {
+                     std::cout << "press down" << std::endl;
+                     memory->button_press(NES_DOWN);
+                     kstate[NES_DOWN] = true;
+                 }
+                 break;
+             }
+             case SDLK_RIGHT: {
+                 if (!kstate[NES_RIGHT]) {
+                     std::cout << "press right" << std::endl;
+                     memory->button_press(NES_RIGHT);
+                     kstate[NES_RIGHT] = true;
+                 }
+                 break;
+             }
+             case SDLK_LEFT: {
+                 if (!kstate[NES_LEFT]) {
+                     std::cout << "press left" << std::endl;
+                     memory->button_press(NES_LEFT);
+                     kstate[NES_LEFT] = true;
+                 }
+                 break;
+             }
+             case SDLK_z: {
+                 if (!kstate[NES_A]) {
+                     std::cout << "press A" << std::endl;
+                     memory->button_press(NES_A);
+                     kstate[NES_A] = true;
+                 }
+                 break;
+             }
+             case SDLK_x: {
+                 if (!kstate[NES_B]) {
+                     std::cout << "press B" << std::endl;
+                     memory->button_press(NES_B);
+                     kstate[NES_B] = true;
+                 }
+                 break;
+             }
+             case SDLK_SPACE: {
+                 if (!kstate[NES_START]) {
+                     std::cout << "press start" << std::endl;
+                     memory->button_press(NES_START);
+                     kstate[NES_START] = true;
+                 }
+                 break;
+             }
+             case SDLK_BACKSPACE: {
+                 if (!kstate[NES_SELECT]) {
+                     std::cout << "press select" << std::endl;
+                     memory->button_press(NES_SELECT);
+                     kstate[NES_SELECT] = true;
+                 }
+                 break;
+             }
+         }
+    }
+    
+    if (event->type == SDL_KEYUP) {
+        uint64_t kup = event->key.keysym.sym;
+        
+        switch (kup) {
+            case SDLK_UP: {
+                if (kstate[NES_UP]) {
+                    std::cout << "release up" << std::endl;
+                    memory->button_release(NES_UP);
+                    kstate[NES_UP] = false;
+                }
+                break;
+            }
+            case SDLK_DOWN: {
+                if (kstate[NES_DOWN]) {
+                    std::cout << "release down" << std::endl;
+                    memory->button_release(NES_DOWN);
+                    kstate[NES_DOWN] = false;
+                }
+                break;
+            }
+            case SDLK_RIGHT: {
+                if (kstate[NES_RIGHT]) {
+                    std::cout << "release right" << std::endl;
+                    memory->button_release(NES_RIGHT);
+                    kstate[NES_RIGHT] = false;
+                }
+                break;
+            }
+            case SDLK_LEFT: {
+                if (kstate[NES_LEFT]) {
+                    std::cout << "release left" << std::endl;
+                    memory->button_press(NES_LEFT);
+                    kstate[NES_LEFT] = false;
+                }
+                break;
+            }
+            case SDLK_z: {
+                if (kstate[NES_A]) {
+                    std::cout << "release A" << std::endl;
+                    memory->button_press(NES_A);
+                    kstate[NES_A] = false;
+                }
+                break;
+            }
+            case SDLK_x: {
+                if (kstate[NES_B]) {
+                    std::cout << "release B" << std::endl;
+                    memory->button_press(NES_B);
+                    kstate[NES_B] = false;
+                }
+                break;
+            }
+            case SDLK_SPACE: {
+                if (kstate[NES_START]) {
+                    std::cout << "release start" << std::endl;
+                    memory->button_press(NES_START);
+                    kstate[NES_START] = false;
+                }
+                break;
+            }
+            case SDLK_BACKSPACE: {
+                if (kstate[NES_SELECT]) {
+                    std::cout << "release select" << std::endl;
+                    memory->button_press(NES_SELECT);
+                    kstate[NES_SELECT] = false;
+                }
+                break;
+            }
+        }
+    }
 }
 
 NES::~NES() {

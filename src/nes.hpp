@@ -38,8 +38,13 @@ private:
     
     // SDL
     SDL_Window* window;
+    SDL_Event* event;
+    
+    bool kstate[8];
     
     bool running;
+    
+    void poll_input();
     
 public:
     NES(const char* filename);

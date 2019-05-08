@@ -26,6 +26,21 @@
 #define VALID_ROM_INDEX(index) (index >= NROM_START && index < CPU_MEM_SIZE)
 #define ACTUAL_ROM_ADDRESS(index) (index - NROM_START)
 
+// input
+
+#define NES_A       0
+#define NES_B       1
+#define NES_SELECT  2
+#define NES_START   3
+#define NES_UP      4
+#define NES_DOWN    5
+#define NES_LEFT    6
+#define NES_RIGHT   7
+
+#define JOYSTICK_1      0x4016
+#define JOYSTICK_2      0x4017
+
+
 // ppu stuff
 
 #define PATTERN_TABLE   0x1000
@@ -61,6 +76,12 @@ private:
     std::array<uint8_t, RAM> ram;
     std::array<uint8_t, CPU_MEM_SIZE - NROM_START> prg_rom;
     
+    // input
+    bool strobe = true;
+    bool reading = false;
+    uint8_t button = 0;
+    bool pressed[8];
+    
     // ppu
     std::shared_ptr<PPU> ppu;
     std::array<uint8_t, PATTERN_TABLE> left;
@@ -92,6 +113,10 @@ public:
     uint8_t ppu_write(uint64_t index, uint8_t value);
     uint8_t ppu_reg_read(uint64_t index);
     void ppu_reg_write(uint64_t index, uint8_t value);
+    
+    // input
+    void button_press(uint8_t button);
+    void button_release(uint8_t button);
 };
 
 #endif
