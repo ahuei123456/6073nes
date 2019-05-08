@@ -22,6 +22,7 @@
 #define VALID_RAM_INDEX(index) (index >= 0 && index < PPU_START)
 #define ACTUAL_RAM_ADDRESS(index) (index % RAM)
 
+#define NMI_VECTOR      0xFFFA
 #define RESET_VECTOR    0xFFFC
 #define VALID_ROM_INDEX(index) (index >= NROM_START && index < CPU_MEM_SIZE)
 #define ACTUAL_ROM_ADDRESS(index) (index - NROM_START)
@@ -76,6 +77,8 @@ private:
     std::array<uint8_t, RAM> ram;
     std::array<uint8_t, CPU_MEM_SIZE - NROM_START> prg_rom;
     
+    bool flag_nmi = false;
+    
     // input
     bool strobe = true;
     bool reading = false;
@@ -104,15 +107,18 @@ public:
     // cpu only methods
     Mem(std::shared_ptr<ROM> game);
     uint16_t reset_vector();
+    uint16_t nmi_vector();
     uint8_t mem_read(uint64_t index);
     uint16_t mem_read2(uint64_t index);
     void mem_write(uint64_t index, uint8_t value);
+    bool read_nmi();
     
     // ppu only methods
     uint8_t ppu_read(uint64_t index);
     uint8_t ppu_write(uint64_t index, uint8_t value);
     uint8_t ppu_reg_read(uint64_t index);
     void ppu_reg_write(uint64_t index, uint8_t value);
+    void set_nmi(bool nmi);
     
     // input
     void button_press(uint8_t button);

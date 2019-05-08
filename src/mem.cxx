@@ -10,7 +10,7 @@ Mem::Mem(std::shared_ptr<ROM> game) {
                 prg_rom[i] = byte;
                 prg_rom[NROM_128+i] = byte;
             }
-        } else if (prg_size == NROM_256) {
+        } else {
             for (int i = 0; i < NROM_256; i++) {
                 uint8_t byte = game->get_prg(i);
                 prg_rom[i] = byte;
@@ -38,6 +38,10 @@ void Mem::set_ppu(std::shared_ptr<PPU> ppu) {
 
 uint16_t Mem::reset_vector() {
     return mem_read2(RESET_VECTOR);
+}
+
+uint16_t Mem::nmi_vector() {
+    return mem_read2(NMI_VECTOR);
 }
 
 uint8_t Mem::mem_read(uint64_t index) {
@@ -87,6 +91,10 @@ void Mem::mem_write(uint64_t index, uint8_t value) {
         reading = !(strobe && value);
         strobe = value;
     }
+}
+
+bool Mem::read_nmi() {
+    return flag_nmi;
 }
 
 // remember to actually update the PPU data
@@ -248,6 +256,10 @@ uint8_t Mem::ppu_write(uint64_t index, uint8_t value) {
             }
         }
     }
+}
+
+void Mem::set_nmi(bool nmi) {
+    flag_nmi = nmi;
 }
 
 void Mem::oam_write(uint8_t value) {

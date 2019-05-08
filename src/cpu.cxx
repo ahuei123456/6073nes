@@ -6,6 +6,9 @@ CPU::CPU(std::shared_ptr<Mem> memory) {
     reg_s = 0xFD;
     reg_p = 0x24;
     reg_pc = memory->reset_vector();
+    if (DEBUG) {
+        reg_pc = 0xc000;
+    }
     //::cout << std::hex << unsigned(reg_pc) << std::endl;
 }
 
@@ -24,6 +27,17 @@ uint16_t CPU::execute() {
         std::cout << "P: " << std::setw(2) << std::hex << unsigned(reg_p) << " ";
         std::cout << "SP: " << std::setw(2) << std::hex << unsigned(reg_s) << " ";
     }
+    
+    if (memory->read_nmi()) {
+        std::cout << "nmi" << std::endl;
+        memory->set_nmi(0);
+        push16(reg_pc);
+        push(reg_s);
+        
+        reg_pc = memory->nmi_vector();
+        cycles += 2;
+    }
+    
     uint8_t opcode = pc_read();
     
     switch (opcode) {
@@ -825,6 +839,7 @@ uint16_t CPU::execute() {
             break;
         }
         default: {
+            std::cout << "pc: " << std::hex << unsigned(reg_pc) << std::endl;
             std::cout << "invalid opcode: " << std::hex << unsigned(opcode) << std::endl;
             std::cout << "byte 02: " << std::hex << unsigned(memory->mem_read(2)) << std::endl;
             std::cout << "byte 03: " << std::hex << unsigned(memory->mem_read(3)) << std::endl;
@@ -844,6 +859,8 @@ uint16_t CPU::execute() {
     total_cycles += cycles;
     return cycles;
 }
+
+
 
 uint8_t CPU::imm() {
     return pc_read();

@@ -159,7 +159,7 @@ void PPU::fill_next_pixel() {
     uint8_t coarse_x = vram_addr % 32;
     uint8_t coarse_y = (vram_addr >> 5) % 32;
 
-    switch (coarse_y * 2 + coarse_x) {
+    switch ((coarse_y * 2 + coarse_x) % 4) {
         //This determines which quadrant the address is in, and selects the 2-bit appropriate attribute from the byte.
         case 0: {
             palette_attribute = attribute_byte_1 & 0x3;
@@ -529,6 +529,7 @@ void PPU::execute() {
         //Pre-render scanline fills the 2 16-bit background tile registers and sets VBLANK and sprite 0 hit flags and sprite overflow flags to 0.
 	 
         if (cycle_mod_341 == 0) {
+            memory->set_nmi(0);
             regs[2] = regs[2] & ~0x80;
             regs[2] = regs[2] & ~0x40;
             regs[2] = regs[2] & ~0x20;
@@ -538,7 +539,10 @@ void PPU::execute() {
         fill_first_tiles();
     } else if (current_scanline == 241) {
         //240th scanline sets VBLANK flag to 1.
-        regs[2] = regs[2] | 0x80;
+        if (regs[0] >> 7) {
+            regs[2] = regs[2] | 0x80;
+            memory->set_nmi(1);
+        }
     }
     
     cycle_mod_8 = (cycle_mod_8 + 1) % 8;
