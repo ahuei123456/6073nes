@@ -62,7 +62,7 @@ uint8_t PPU::read_reg(uint64_t index) {
 
 void PPU::set_oam(uint8_t byte) {
 //Sets all of OAM to the data on the corresponding input page.
-    uint8_t word_addr = byte << 8;
+    uint16_t word_addr = ((uint16_t) byte) << 8;
     for (int i = 0; i < 0xFF; i+= 4) {
         //Each sprite has 4 bytes of data. We fill the 64 sprites in.
         int sprite_index = i / 4;
