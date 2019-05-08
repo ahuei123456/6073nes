@@ -45,9 +45,11 @@
 
 #define VALID_PPU_INDEX(index) (index >= 0x2000 && index <= 0x3FFF)
 #define VALID_PPU_MEM_INDEX(index) (index >= 0 && index <= 0x3FFF)
+#define VALID_APU_INDEX(index) ((index >= 0x4000 && index <= 0x4008) || (index >= 0x400A && index <= 0x400C) || (index >= 0x400E && index <= 0x4013) || (index == 0x4015) || (index == 0x4017))
 #define ACTUAL_PPU_REGISTER(index) ((index - 0x2000) % 8 + 0x2000)
 #define PPU_REGISTER_WRITABLE(index) (!(index == 0x2002))
 #define PPU_REGISTER_READABLE(index) (index == 0x2002 || index == 0x2004 || index == 0x2007)
+#define APU_REGISTER_READABLE(index) (index == 0x4015)
 
 class ROM;
 class CPU;
@@ -77,6 +79,11 @@ private:
     uint8_t ppu_latch;
     void oam_write(uint8_t value);
     
+    std::shared_ptr<APU> apu;
+    uint8_t apu_reg_read(uint64_t index);
+    void apu_reg_write(uint64_t index, uint8_t value);
+
+
 public:
     
     // setup
@@ -93,6 +100,7 @@ public:
     // ppu only methods
     uint8_t ppu_read(uint64_t index);
     uint8_t ppu_write(uint64_t index, uint8_t value);
+
 };
 
 #endif
