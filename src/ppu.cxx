@@ -16,8 +16,36 @@ uint8_t Sprite::vertical_flip() {
     return (attributes & 0x80) >> 7;
 }
 
-PPU::PPU(std::shared_ptr<Mem> memory) {
+uint8_t Sprite::byte(uint8_t index) {
+    switch (index) {
+		case 0: {
+			return Y;
+		}
+		case 1: { 
+			return index;
+		}
+		case 2: { 
+			return attributes;
+		}
+		case 3: { 
+			return X; 
+		}
+	}
+}
+
+PPU::PPU(std::shared_ptr<Mem> memory, SDL_Window* window) {
     this->memory = memory;
+    this->window = window;
+    
+    renderer = SDL_CreateRenderer(window, -1, 0);
+    screen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, WIDTH, HEIGHT);
+    
+    
+}
+
+PPU::~PPU() {
+    SDL_DestroyTexture(screen);
+    SDL_DestroyRenderer(renderer);
 }
 
 void PPU::set_reg(uint64_t index, uint8_t value) {
@@ -38,10 +66,10 @@ void PPU::set_oam(uint8_t byte) {
     for (int i = 0; i < 0xFF; i+= 4) {
         //Each sprite has 4 bytes of data. We fill the 64 sprites in.
         int sprite_index = i / 4;
-        oam[sprite_index].Y = memory->mem_read(word_addr);
-        oam[sprite_index].index = memory->mem_read(word_addr + 1);
-        oam[sprite_index].attributes = memory->mem_read(word_addr + 2);
-        oam[sprite_index].X = memory->mem_read(word_addr + 3);
+        oam[sprite_index].Y = memory->mem_read(word_addr + i);
+        oam[sprite_index].index = memory->mem_read(word_addr + i + 1);
+        oam[sprite_index].attributes = memory->mem_read(word_addr + i + 2);
+        oam[sprite_index].X = memory->mem_read(word_addr + i + 3);
     }
 }
 
@@ -117,14 +145,15 @@ uint8_t PPU::get_sprite_pixel() {
                 //Sprite must be active and must have a non-transparent pixel
           	  	return_pixel = memory->ppu_read(0x3F10 + 4 * (sprite_attributes[i] % 4) + color);
 	          	sprite_foreground = (((sprite_attributes[i] >> 5) & 0x1) == 1);
-		  	 return return_pixel;
+                return return_pixel;
 	        }
         }	   
     }
+    
 }
 
 void PPU::fill_next_pixel() {
-//This function fills in the next pixel in the grid.
+    //This function fills in the next pixel in the grid.
     uint8_t color = (background_bitmap_1 >> (8 + fine_x) & 0x1) << 1 + ((background_bitmap_1 >> fine_x) & 0x1);
     uint8_t palette_attribute;
     uint8_t coarse_x = vram_addr % 32;
@@ -219,7 +248,6 @@ void PPU::fill_sprite_bitmaps() {
 		}
 	}
 }
-
 
 void PPU::fill_first_tiles() {
 	if (cycle_mod_341 == 321) {
@@ -378,23 +406,6 @@ void PPU::background_eval() {
     }
 }
 
-uint8_t PPU::sprite_byte(Sprite sprite, uint8_t index) {
-	switch (index) {
-		case 0: {
-			return sprite.Y;
-		}
-		case 1: { 
-			return sprite.index;
-		}
-		case 2: { 
-			return sprite.attributes;
-		}
-		case 3: { 
-			return sprite.X; 
-		}
-	}
-}
-
 void PPU::sprite_eval() {
 //This function is responsible for placing sprites into secondary OAM and filling the sprite data latches to be used in sprite evaluation for the next scanline.
     if (cycle_mod_341 <= 1 && cycle_mod_341 >= 64) {
@@ -473,7 +484,7 @@ void PPU::sprite_eval() {
                 n++;
             }
         } else {
-            primary_oam_byte = sprite_byte(oam[n], m);
+            primary_oam_byte = oam[n].byte(m);
             return;
         }
     } else if (cycle_mod_341 >= 257 && cycle_mod_341 <= 320) {
@@ -509,7 +520,8 @@ void PPU::sprite_eval() {
 }
 
 void PPU::execute() {
-//Our main cycle execution function for PPU. Every time this is called, a cycle of PPU is executed.
+    //Our main cycle execution function for PPU. Every time this is called, a cycle of PPU is executed.
+    
     if (current_scanline >= 0 && current_scanline < 240) { 
     	 background_eval();
     	 sprite_eval();
@@ -535,13 +547,39 @@ void PPU::execute() {
         //Important to reset cycle_mod_8 for the new scanline so calculations of cycles aren't messed up
         cycle_mod_8 = 0;
         current_scanline = (current_scanline + 1) % 262;
+        if (current_scanline == 0) {
+            display();
+        }
     }
-
+    
+    total_cycles++;
 }
 
 void PPU::display() {
-//This function uses the SDL2 library to display the pixel array in a window.
+    //This function uses the SDL2 library to display the pixel array in a window.
+    uint32_t* pixels = get_pixel_array();
+    SDL_UpdateTexture(screen, NULL, pixels, WIDTH * sizeof(uint32_t));
     
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, screen, NULL, NULL);
+    SDL_RenderPresent(renderer);
 }
 
+uint32_t* PPU::get_pixel_array() {
+    uint32_t* pixels = new uint32_t[WIDTH * HEIGHT];
+    for (int Y = 0; Y < HEIGHT; Y++) { // Y
+        for (int X = 0; X < WIDTH; X++) { // X
+            uint8_t val = pixel_array[Y][X];
+            val &= 0x3f;
+            // std::cout << unsigned(val) << std::endl;
+            uint32_t color = color_map[val];
+            // because I'm dumb
+            color >>= 8;
+            color += 0xFF000000;
+            pixels[ADDR(X,Y)] = color;
+        }
+    }
+    
+    return pixels;
+}
 

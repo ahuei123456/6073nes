@@ -15,8 +15,7 @@
 #define CYCLE_TIME      559
 #define CYCLE_LITERAL   558.730073590338
 
-#define WIDTH           256
-#define HEIGHT          240
+
 
 class ROM;
 class CPU;
@@ -31,20 +30,25 @@ private:
     std::shared_ptr<Mem> memory;
     
     uint64_t cycles;
+    uint16_t passed;
     int64_t cycles_until_ppu;
     
-    std::chrono::high_resolution_clock::time_point prev;
+    std::chrono::high_resolution_clock::time_point prev_cycle;
+    std::chrono::high_resolution_clock::time_point prev_frame;
     
     // SDL
-    std::shared_ptr<SDL_Window> window;
-    std::shared_ptr<SDL_Surface> screen;
+    SDL_Window* window;
+    
+    bool running;
     
 public:
     NES(const char* filename);
+    ~NES();
     void run();
     void execute();
     
     void cpu_run();
+    void ppu_run();
 };
 
 #endif

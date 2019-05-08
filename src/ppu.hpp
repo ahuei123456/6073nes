@@ -2,9 +2,11 @@
 #define ppu_hpp
 
 #include <cstdint>
+#include <iostream>
 #include <array>
 #include <exception>
 #include <memory>
+#include <SDL.h>
 #include "mem.hpp"
 
 #define SPRITES 0x40
@@ -12,6 +14,15 @@
 #define LEFT 0xFFF
 #define RIGHT 0xFFF
 #define REGS 8
+
+#define WIDTH           256
+#define HEIGHT          240
+#define ADDR(X, Y) (Y * WIDTH + X)
+
+#define PALETTE_32 {0x656565FF, 0x002D69FF, 0x131F7FFF, 0x3C137CFF, 0x600B62FF, 0x730A37FF, 0x710F07FF, 0x5A1A00FF, 0x342800FF, 0x0B3400FF, 0x003C00FF, 0x003D10FF, 0x003840FF, 0x000000FF, 0x000000FF, 0x000000FF, \
+                    0xAEAEAEFF, 0x0F63B3FF, 0x4051D0FF, 0x7841CCFF, 0xA736A9FF, 0xC03470FF, 0xBD3C30FF, 0x9F4A00FF, 0x6D5C00FF, 0x366D00FF, 0x077704FF, 0x00793DFF, 0x00727DFF, 0x000000FF, 0x000000FF, 0x000000FF, \
+                    0xFEFEFFFF, 0x5DB3FFFF, 0x8FA1FFFF, 0xC890FFFF, 0xF785FAFF, 0xFF83C0FF, 0xFF8B7FFF, 0xEF9A49FF, 0xBDAC2CFF, 0x85BC2FFF, 0x55C753FF, 0x3CC98CFF, 0x3EC2CDFF, 0x4E4E4EFF, 0x000000FF, 0x000000FF, \
+                    0xFEFEFFFF, 0xBCDFFFFF, 0xD1D8FFFF, 0xE8D1FFFF, 0xFBCDFDFF, 0xFFCCE5FF, 0xFFCFCAFF, 0xF8D5B4FF, 0xE4DCA8FF, 0xCCE3A9FF, 0xB9E8B8FF, 0xAEE8D0FF, 0xAFE5EAFF, 0xB6B6B6FF, 0x000000FF, 0x000000FF}
 
 class Mem;
 
@@ -25,6 +36,7 @@ struct Sprite{
     uint8_t priority();
     uint8_t horizontal_flip();
     uint8_t vertical_flip();
+    uint8_t byte(uint8_t index);
 };
 
 class PPU {
@@ -77,15 +89,26 @@ private:
     uint8_t attribute_byte;
 
     std::array<std::array<uint8_t, 256>, 240> pixel_array;
+    std::array<uint32_t, 64> color_map = PALETTE_32;
+    
+    // SDL
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    SDL_Texture* screen;
+    
+    uint32_t* get_pixel_array();
+    
+    uint64_t total_cycles = 0;
 
 public:
-    PPU(std::shared_ptr<Mem> memory);
-    void set_reg(uint64_t index, uint8_t value);
-    uint8_t read_reg(uint64_t index);
-
+    PPU(std::shared_ptr<Mem> memory, SDL_Window* window);
+    ~PPU();
     void set_oam(uint8_t byte);
     void set_vram_addr(uint8_t value);
     uint16_t get_vram_addr();
+    void set_reg(uint64_t index, uint8_t value);
+    uint8_t read_reg(uint64_t index);
+
     void inc_vram_addr(uint8_t type);
     void set_scroll_coord(uint8_t value);
     void update_buffer();

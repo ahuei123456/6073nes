@@ -222,6 +222,7 @@
 // illegal opcodes
 
 #define ERROR   0xFFFF
+#define DEBUG   0
 
 #define NEGATIVE(operand) (operand & 0x80)
 #define ZERO(operand) (operand == 0)

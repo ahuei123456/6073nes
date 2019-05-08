@@ -55,7 +55,6 @@ class PPU;
 
 class Mem {
 private:
-    std::array<uint8_t, CPU_MEM_SIZE> cpu_mem;
     
     // cpu
     std::shared_ptr<CPU> cpu;

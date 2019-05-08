@@ -5,7 +5,7 @@ CPU::CPU(std::shared_ptr<Mem> memory) {
     total_cycles = 7;
     reg_s = 0xFD;
     reg_p = 0x24;
-    reg_pc = 0xC000;
+    reg_pc = memory->reset_vector();
     //::cout << std::hex << unsigned(reg_pc) << std::endl;
 }
 
@@ -16,12 +16,14 @@ uint16_t CPU::execute() {
         cycles = 0;
     }
     
-    std::cout << std::setfill('0') << std::setw(4) << std::hex << unsigned(reg_pc) << " ";
-    std::cout << "A: " << std::setw(2) << std::hex << unsigned(reg_ac) << " ";
-    std::cout << "X: " << std::setw(2) << std::hex << unsigned(reg_x) << " ";
-    std::cout << "Y: " << std::setw(2) << std::hex << unsigned(reg_y) << " ";
-    std::cout << "P: " << std::setw(2) << std::hex << unsigned(reg_p) << " ";
-    std::cout << "SP: " << std::setw(2) << std::hex << unsigned(reg_s) << " ";
+    if (DEBUG) {
+        std::cout << std::setfill('0') << std::setw(4) << std::hex << unsigned(reg_pc) << " ";
+        std::cout << "A: " << std::setw(2) << std::hex << unsigned(reg_ac) << " ";
+        std::cout << "X: " << std::setw(2) << std::hex << unsigned(reg_x) << " ";
+        std::cout << "Y: " << std::setw(2) << std::hex << unsigned(reg_y) << " ";
+        std::cout << "P: " << std::setw(2) << std::hex << unsigned(reg_p) << " ";
+        std::cout << "SP: " << std::setw(2) << std::hex << unsigned(reg_s) << " ";
+    }
     uint8_t opcode = pc_read();
     
     switch (opcode) {
@@ -699,7 +701,6 @@ uint16_t CPU::execute() {
         }
         case JSR: {
             uint16_t operand = pc_read2() - 1;
-            std::cout << "pc: " << reg_pc << " ";
             push16(reg_pc - 1);
             cycles++;
             reg_pc = operand + 1;
@@ -715,7 +716,6 @@ uint16_t CPU::execute() {
         }
         case RTS: {
             uint16_t newaddr = pop16() + 1;
-            std::cout << "new addr: " << newaddr << " ";
             reg_pc = newaddr;
             cycles += 3;
             break;
@@ -838,8 +838,9 @@ uint16_t CPU::execute() {
     if((reg_p & 32) >> 5 == 0) {
         //exit(0);
     }
-    
-    std::cout << "cycles: " << std::dec << unsigned(total_cycles) << std::endl;
+    if (DEBUG) {
+        std::cout << "cycles: " << std::dec << unsigned(total_cycles) << std::endl;
+    }
     total_cycles += cycles;
     return cycles;
 }
@@ -1159,7 +1160,9 @@ void CPU::mem_write(uint64_t index, uint8_t value) {
 uint8_t CPU::pc_read() {
     uint8_t data = mem_read(reg_pc);
     reg_pc++;
-    std::cout << std::hex << unsigned(data) << " ";
+    if (DEBUG) {
+        std::cout << std::hex << unsigned(data) << " ";
+    }
     return data;
 }
 
