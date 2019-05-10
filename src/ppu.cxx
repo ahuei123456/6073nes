@@ -95,6 +95,16 @@ bool PPU::get_vblank_nmi_flag() {
     return flag;
 }
 
+void PPU::vram_increment() {
+    uint8_t inc = get_vram_increment();
+    
+    if (inc == 1) {
+        inc_coarse_x();
+    } else {
+        vram_addr += inc;
+    }
+}
+
 // PPUMASK
 
 bool PPU::get_greyscale() {
@@ -235,7 +245,7 @@ void PPU::ext_reg_write(uint64_t index, uint8_t value) {
         }
         case 7: {
             memory->ppu_write(vram_addr, value);
-            vram_addr += get_vram_increment();
+            vram_increment();
             break;
         }
     }
@@ -255,7 +265,7 @@ uint8_t PPU::ext_reg_read(uint64_t index) {
         }
         case 7: {
             value = memory->ppu_read(vram_addr);
-            vram_addr += get_vram_increment();
+            vram_increment();
             break;
         }
     }
@@ -276,13 +286,13 @@ void PPU::set_oam(uint8_t byte) {
 }
 
 void PPU::set_vram_addr(uint8_t value) {
-//Setting the new vram address shifts left the lowest 8 bits and then adds a byte value.
+    //Setting the new vram address shifts left the lowest 8 bits and then adds a byte value.
     if (!addr_latch) {
         vram_addr = ((uint16_t) value << 8) + (vram_addr % 0xFF); 
     } else {
         vram_addr = ((vram_addr >> 8) << 8) + value;
     }
-
+    
     addr_latch = !addr_latch;
 }
 

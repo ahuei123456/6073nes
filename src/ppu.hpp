@@ -109,6 +109,7 @@ private:
     uint8_t get_sprite_height();
     bool get_ppu_select();
     bool get_vblank_nmi_flag();
+    void vram_increment();
     
     // PPUMASK info
     bool get_greyscale();
