@@ -4,15 +4,24 @@ NES::NES(const char* filename) {
     cycles = 0;
     cycles_until_ppu = 3;
     
+    if (SDL_Init(SDL_INIT_AUDIO) < 0) {
+	    std::cout << "No audio\n";
+    }
+
+    
     rom = std::make_shared<ROM>(filename);
     memory = std::make_shared<Mem>(rom);
     
     cpu = std::make_shared<CPU>(memory);
     ppu = std::make_shared<PPU>(memory);
-    
+    apu = std::make_shared<APU>(memory);
+
     memory->set_cpu(cpu);
     memory->set_ppu(ppu);
+    memory->set_apu(apu);
+
     
+
     prev = std::chrono::high_resolution_clock::now();
 }
 
@@ -49,4 +58,6 @@ void NES::execute() {
             cycles_until_ppu -= passed;
         }
     }
+
+    apu->execute();
 }

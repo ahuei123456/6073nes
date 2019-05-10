@@ -27,6 +27,10 @@ void Mem::set_ppu(std::shared_ptr<PPU> ppu) {
     this->ppu = ppu;
 }
 
+void Mem::set_apu(std::shared_ptr<APU> apu) {
+    this->apu = apu;
+}
+
 uint16_t Mem::reset_vector() {
     return mem_read2(RESET_VECTOR);
 }

@@ -60,6 +60,7 @@
 class ROM;
 class CPU;
 class PPU;
+class APU;
 
 class Mem {
 private:
@@ -93,6 +94,7 @@ public:
     // setup
     void set_cpu(std::shared_ptr<CPU> cpu);
     void set_ppu(std::shared_ptr<PPU> ppu);
+    void set_apu(std::shared_ptr<APU> apu);
 
     // cpu only methods
     Mem(std::shared_ptr<ROM> game);

@@ -1,5 +1,10 @@
 #include "apu.hpp"
 
+APU::APU(std::shared_ptr<Mem> memory) {
+	this->memory = memory;
+}
+
+
 uint8_t APU::length_lookup(uint8_t index) {
       if (index % 2 == 1) {
 	  uint8_t lin_length_index = (0x1F - index) / 2;
@@ -525,13 +530,44 @@ void APU::frame_clock() {
 	}
 }
 
+/*
 
-void initialize_SDL() {
+SDL_AudioCallback callback(void* userdata, Uint8* stream, int len) {
 
 }
 
-void send_byte_to_SDL() {
+*/
 
+
+void APU::initialize_SDL() {
+
+	SDL_AudioSpec want, have;
+	want.freq = 11025;
+	want.format = AUDIO_U8;
+	want.channels = 1;
+	want.callback = NULL;
+
+	//SDL_AudioInit("sndio");
+	//std::cout << SDL_GetNumAudioDrivers() << "\n";
+	//std::cout << SDL_GetCurrentAudioDriver() << "\n";
+	std::cout << SDL_GetNumAudioDevices(0) << "\n";
+	for (int i = 0; i < 6; i++) {
+		std::cout << SDL_GetAudioDriver(i) << "\n";
+	//	std::cout << SDL_GetNumAudioDevices(0) << "\n";
+//		std::cout << SDL_GetAudioDeviceName(0, 0) << "\n";
+	}
+
+	device = SDL_OpenAudioDevice(SDL_GetAudioDeviceName(0, 0), 0, &want, &have, 0);
+	if (device == 0) {
+		std::cout << "Error in opening audio device " << SDL_GetError() << "\n";
+	}
+
+	SDL_PauseAudioDevice(device, 0);	
+
+}
+
+void APU::send_byte_to_SDL() {
+	SDL_QueueAudio(device, &current_signal, 1);
 }
 
 
@@ -546,6 +582,7 @@ void APU::execute() {
 
       dmc_update();
 
-      mix_waves();
+      initialize_SDL();
+      current_signal = mix_waves();
       send_byte_to_SDL();
 }

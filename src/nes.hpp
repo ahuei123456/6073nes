@@ -10,6 +10,7 @@
 #include "cpu.hpp"
 #include "ppu.hpp"
 #include "mem.hpp"
+#include "apu.hpp"
 
 #define CYCLE_TIME      559
 #define CYCLE_LITERAL   558.730073590338
@@ -24,6 +25,7 @@ private:
     std::shared_ptr<ROM> rom;
     std::shared_ptr<CPU> cpu;
     std::shared_ptr<PPU> ppu;
+    std::shared_ptr<APU> apu;
     std::shared_ptr<Mem> memory;
     
     uint64_t cycles;

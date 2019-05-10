@@ -3,6 +3,8 @@
 
 #include <SDL.h>
 #include "mem.hpp"
+#include <iostream>
+#include <sndio.h>
 
 #define WAVE_REGS 4
 #define NUM_PULSE_WAVES 2
@@ -104,11 +106,13 @@ private:
 
 	uint8_t current_clock;
 
-	uint8_t current_signal = 0;
+	uint8_t current_signal = 128;
+
 
 	SDL_AudioDeviceID device;
 
 public:
+	APU(std::shared_ptr<Mem> memory); 
 	uint8_t length_lookup(uint8_t index);
 	uint16_t noise_period_lookup(uint8_t index);
 	uint16_t dmc_period_lookup(uint8_t index);
@@ -133,7 +137,10 @@ public:
 	void frame_clock();
 	void execute();
 
+	SDL_AudioCallback callback(void* userdata, Uint8* stream, int len);
 	void initialize_SDL();
 	void send_byte_to_SDL();
 
 };
+
+#endif
