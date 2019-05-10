@@ -315,7 +315,7 @@ void APU::clock_sweep(struct Sweep& sweep, uint8_t& info_reg) {
 }
 
 void APU::pulse_update(uint8_t index) {
-//Index indicates which pulse wave is being updated.
+//This function clocks the pulse timer and makes appropriate changes for the pulse wave specified by the index.
 	uint8_t const_vol = (pulse_regs[index][0] >> 4) % 2;
 	uint8_t length_counter_halt = (pulse_regs[index][0] >> 4) & 0x1;
 	uint16_t timer_period = pulse_regs[index][2] + ((pulse_regs[index][3] % 8) << 8);
@@ -358,6 +358,7 @@ void APU::pulse_update(uint8_t index) {
 }
 
 void APU::triangle_update() {
+//This function clocks the triangle wave and makes appropriate changes..
 	uint8_t timer_period = triangle_regs[2] + ((triangle_regs[3] % 8) << 8);
 	if (triangle_timer == 0) {
 		triangle_timer = timer_period;
@@ -376,6 +377,7 @@ void APU::triangle_update() {
 }
 
 void APU::noise_update() {
+//This function clocks the noise timer and makes the appropriate changes.
 	uint8_t const_vol = (noise_regs[0] >> 4) % 2;
 	uint8_t mode_bit = (noise_regs[2] >> 7) % 2;
 	uint8_t xor_bit_index = (mode_bit == 1) ? 6 : 1;
@@ -410,6 +412,7 @@ void APU::noise_update() {
 }
 
 void APU::dmc_update() {
+//This function clocks the DMC timer and makes appropriate changes.
 	uint8_t timer_period = dmc_period_lookup(dmc_regs[0] % 16);
 
 	if (dmc_restart && dmc_bits_remaining == 0) {
@@ -540,7 +543,7 @@ SDL_AudioCallback callback(void* userdata, Uint8* stream, int len) {
 
 
 void APU::initialize_SDL() {
-
+//This function is responsible for initializing the SDL Audio.
 	SDL_AudioSpec want, have;
 	want.freq = 11025;
 	want.format = AUDIO_U8;
