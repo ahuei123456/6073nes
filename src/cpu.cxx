@@ -1211,6 +1211,12 @@ uint16_t CPU::mem_read2(uint64_t index) {
 
 void CPU::mem_write(uint64_t index, uint8_t value) {
     cycles++;
+    if (index == 0x4014) {
+        if (total_cycles % 2) {
+            cycles++;
+        }
+        cycles += 513;
+    }
     memory->mem_write(index, value);
 }
 

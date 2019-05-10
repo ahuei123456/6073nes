@@ -234,7 +234,9 @@ void PPU::ext_reg_write(uint64_t index, uint8_t value) {
             break;
         }
         case 7: {
+            memory->ppu_write(vram_addr, value);
             vram_addr += get_vram_increment();
+            break;
         }
     }
     
@@ -249,13 +251,19 @@ uint8_t PPU::ext_reg_read(uint64_t index) {
     switch (index) {
         case 2: {
             regs[index] &= 0x7f;
+            break;
+        }
+        case 7: {
+            value = memory->ppu_read(vram_addr);
+            vram_addr += get_vram_increment();
+            break;
         }
     }
     return value;
 }
 
 void PPU::set_oam(uint8_t byte) {
-//Sets all of OAM to the data on the corresponding input page.
+    //Sets all of OAM to the data on the corresponding input page.
     uint16_t word_addr = ((uint16_t) byte) << 8;
     for (int i = 0; i < 0xFF; i+= 4) {
         //Each sprite has 4 bytes of data. We fill the 64 sprites in.

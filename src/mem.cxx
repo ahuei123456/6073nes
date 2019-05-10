@@ -137,8 +137,8 @@ uint8_t Mem::ppu_read(uint64_t index) {
         //Addresses in this range are mirrors of the nametable addresses.
         index -= 0x1000;
     } else if (index >= 0x3F20 && index <= 0x3FFF) {
-    //Addresses in this range are mirrors of the palette RAM addresses.
-   	index = 0x3F00 + (index % 0x20);
+        //Addresses in this range are mirrors of the palette RAM addresses.
+        index = 0x3F00 + (index % 0x20);
     }
 
     //Now we find the corresponding area of memory the address belongs to and calculate the index to return.
@@ -203,9 +203,9 @@ uint8_t Mem::ppu_write(uint64_t index, uint8_t value) {
     } else if (index < 0x2800) {
         nametables[1][index % 0x400] = value;
     } else if (index < 0x2C00) {
-	nametables[2][index % 0x400] = value;
+        nametables[2][index % 0x400] = value;
     } else if (index < 0x3000) {
-	nametables[3][index % 0x400] = value;
+        nametables[3][index % 0x400] = value;
     } else if (index >= 0x3F00 && index < 0x3F20) {
         uint8_t palette_num = (index % 0x10) / 4;
         uint8_t color_num = (index % 4);

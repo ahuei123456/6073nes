@@ -59,8 +59,11 @@ void NES::execute() {
     poll_input();
     
     passed = cpu->execute();
-    std::cout << cpu->get_inst();
-    std::cout << ppu->debug();
+    if (false) {
+        std::cout << cpu->get_inst();
+        std::cout << ppu->debug();
+        std::cout << std::endl;
+    }
     
     if (passed == ERROR) {
         std::cout << "cycles: " << cycles << std::endl;
@@ -73,7 +76,6 @@ void NES::execute() {
     }
     
     
-    std::cout << std::endl;
     
     run_t--;
 }
