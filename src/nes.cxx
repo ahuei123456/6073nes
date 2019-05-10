@@ -17,6 +17,12 @@ NES::NES(const char* filename) {
 
 
     
+    if (SDL_Init(SDL_INIT_AUDIO) < 0) {
+	    std::cout << "No audio\n";
+    }
+
+
+    
     rom = std::make_shared<ROM>(filename);
     memory = std::make_shared<Mem>(rom);
     

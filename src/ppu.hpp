@@ -68,7 +68,7 @@ private:
     uint16_t high_shift, low_shift;
     uint8_t palette_attribute_1, palette_attribute_2;
     
-    // sprites
+   
     std::array<Sprite, SPRITES> oam;
     std::array<Sprite, SPRITES_SEC> oam_sec;
     std::array<uint8_t, SPRITES_SEC> sprite_bitmap_low;
@@ -182,6 +182,7 @@ public:
     void kmsv2();
     
     std::string debug();
+    
 };
 
 #endif
