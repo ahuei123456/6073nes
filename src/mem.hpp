@@ -8,6 +8,7 @@
 #include "rom.hpp"
 #include "cpu.hpp"
 #include "ppu.hpp"
+#include "apu.hpp"
 
 #define NROM_128        16384
 #define NROM_256        32768
@@ -51,6 +52,11 @@
 #define PPU_REGISTER_READABLE(index) (index == 0x2002 || index == 0x2004 || index == 0x2007)
 #define APU_REGISTER_READABLE(index) (index == 0x4015)
 
+//apu stuff
+
+#define APUSTATUS       0x4015
+#define FRAME_COUNTER   0x4017
+
 class ROM;
 class CPU;
 class PPU;
@@ -80,8 +86,6 @@ private:
     void oam_write(uint8_t value);
     
     std::shared_ptr<APU> apu;
-    uint8_t apu_reg_read(uint64_t index);
-    void apu_reg_write(uint64_t index, uint8_t value);
 
 
 public:
@@ -101,6 +105,9 @@ public:
     uint8_t ppu_read(uint64_t index);
     uint8_t ppu_write(uint64_t index, uint8_t value);
 
+    // apu only methods
+    void apu_reg_write(uint64_t index, uint8_t value);
+    uint8_t apu_reg_read(uint64_t);
 };
 
 #endif

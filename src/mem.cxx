@@ -42,6 +42,8 @@ uint8_t Mem::mem_read(uint64_t index) {
         return ppu_reg_read(index);
     } else if (VALID_ROM_INDEX(index)) {
         return prg_rom[ACTUAL_ROM_ADDRESS(index)];
+    } else if (VALID_APU_INDEX(index)) {
+	return apu_reg_read(index);
     } else {
         // placeholder
         return 0;
@@ -63,6 +65,8 @@ void Mem::mem_write(uint64_t index, uint8_t value) {
         ppu_reg_write(index, value);
     } else if (index == OAMDMA) {
         oam_write(value);
+    } else if (VALID_APU_INDEX(index)) {
+	apu_reg_write(index, value);
     }
 }
 
@@ -246,6 +250,14 @@ uint8_t Mem::ppu_write(uint64_t index, uint8_t value) {
 	     }
         }
     }
+}
+
+uint8_t Mem::apu_reg_read(uint64_t index) {
+    return apu->reg_read(index);
+}
+
+void Mem::apu_reg_write(uint64_t index, uint8_t value) {
+    apu->reg_write(index, value);
 }
 
 void Mem::oam_write(uint8_t value) {
