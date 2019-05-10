@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <memory>
 
@@ -122,8 +123,36 @@
 #define LSR_A   0x4E
 #define LSR_AX  0x5E
 
-#define NOP     0xEA
-#define NOP_2   0xC2
+#define NOP_11A 0xEA
+#define NOP_11B 0xC2
+#define NOP_11C 0x1A
+#define NOP_11D 0x3A
+#define NOP_11E 0x5A
+#define NOP_11F 0x7A
+#define NOP_11G 0xDA
+#define NOP_11H 0xFA
+
+#define NOP_21A 0x80
+
+#define NOP_22A 0x04
+#define NOP_22B 0x44
+#define NOP_22C 0x64
+
+#define NOP_23A 0x14
+#define NOP_23B 0x34
+#define NOP_23C 0x54
+#define NOP_23D 0x74
+#define NOP_23E 0xD4
+#define NOP_23F 0xF4
+
+#define NOP_33A 0x0C
+
+#define NOP_34A 0x1C
+#define NOP_34B 0x3C
+#define NOP_34C 0x5C
+#define NOP_34D 0x7C
+#define NOP_34E 0xDC
+#define NOP_34F 0xFC
 
 #define ORA_I   0x09
 #define ORA_Z   0x05
@@ -223,7 +252,7 @@ private:
     // status register
     uint8_t reg_p;
     
-    // addressing modes
+    // addressing modes (get operand)
     uint8_t imm();
     uint8_t zp();
     uint8_t zp_x();
@@ -234,19 +263,50 @@ private:
     uint8_t ind_x();
     uint8_t ind_y();
     
+    // addressing modes (get address)
+    uint8_t a_zp();
+    uint8_t a_zp_x();
+    uint8_t a_zp_y();
+    uint16_t a_abs();
+    uint16_t a_abs_x();
+    uint16_t a_abs_y();
+    uint16_t a_ind_x();
+    uint16_t a_ind_y();
+    
+    // shifts
+    uint8_t lsr(uint8_t value);
+    uint8_t asl(uint8_t value);
+    uint8_t ror(uint8_t value);
+    uint8_t rol(uint8_t value);
+    
     // instructions
     void lda(uint8_t operand);
     void ldx(uint8_t operand);
     void ldy(uint8_t operand);
+    void sta(uint16_t address);
+    void stx(uint16_t address);
+    void sty(uint16_t address);
+    void dec(uint16_t address);
+    void inc(uint16_t address);
     void sbc(uint8_t operand);
     void adc(uint8_t operand);
+    void cmp(uint8_t reg, uint8_t mem);
+    void b(bool condition);
+    void ora(uint8_t operand);
+    void eor(uint8_t operand);
+    void aan(uint8_t operand);
+    void lsr_m(uint16_t address);
+    void asl_m(uint16_t address);
+    void ror_m(uint16_t address);
+    void rol_m(uint16_t address);
+    
     void check_nz(uint8_t operand);
     
     void page_shift(uint16_t shift, uint16_t addr);
     
     void set_negative(bool value);
     void set_overflow(bool value);
-    
+    void set_one(bool value);
     void set_break(bool value);
     void set_decimal(bool value);
     void set_interrupt(bool value);
@@ -255,6 +315,7 @@ private:
     
     // cycle stuff
     uint8_t cycles;
+    uint64_t total_cycles;
     
     // clocked events
     uint8_t mem_read(uint64_t index);
