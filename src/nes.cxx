@@ -8,6 +8,7 @@ NES::NES(const char* filename) {
 	    std::cout << "No audio\n";
     }
 
+
     
     rom = std::make_shared<ROM>(filename);
     memory = std::make_shared<Mem>(rom);
@@ -20,7 +21,8 @@ NES::NES(const char* filename) {
     memory->set_ppu(ppu);
     memory->set_apu(apu);
 
-    
+    apu->initialize_SDL();
+
 
     prev = std::chrono::high_resolution_clock::now();
 }

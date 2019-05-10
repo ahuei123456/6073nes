@@ -582,7 +582,7 @@ void APU::execute() {
 
       dmc_update();
 
-      initialize_SDL();
+      //initialize_SDL();
       current_signal = mix_waves();
       send_byte_to_SDL();
 }

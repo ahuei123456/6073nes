@@ -16,12 +16,12 @@ uint16_t CPU::execute() {
         cycles = 0;
     }
     
-    //std::cout << std::setfill('0') << std::setw(4) << std::hex << unsigned(reg_pc) << " ";
-    //std::cout << "A: " << std::setw(2) << std::hex << unsigned(reg_ac) << " ";
-    //std::cout << "X: " << std::setw(2) << std::hex << unsigned(reg_x) << " ";
-    //std::cout << "Y: " << std::setw(2) << std::hex << unsigned(reg_y) << " ";
-    //std::cout << "P: " << std::setw(2) << std::hex << unsigned(reg_p) << " ";
-    //std::cout << "SP: " << std::setw(2) << std::hex << unsigned(reg_s) << " ";
+    std::cout << std::setfill('0') << std::setw(4) << std::hex << unsigned(reg_pc) << " ";
+    std::cout << "A: " << std::setw(2) << std::hex << unsigned(reg_ac) << " ";
+    std::cout << "X: " << std::setw(2) << std::hex << unsigned(reg_x) << " ";
+    std::cout << "Y: " << std::setw(2) << std::hex << unsigned(reg_y) << " ";
+    std::cout << "P: " << std::setw(2) << std::hex << unsigned(reg_p) << " ";
+    std::cout << "SP: " << std::setw(2) << std::hex << unsigned(reg_s) << " ";
     uint8_t opcode = pc_read();
     
     
