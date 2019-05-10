@@ -98,10 +98,10 @@ bool PPU::get_vblank_nmi_flag() {
 void PPU::vram_increment() {
     uint8_t inc = get_vram_increment();
     
-    if (inc == 1) {
-        inc_coarse_x();
-    } else {
-        vram_addr += inc;
+    vram_addr += inc;
+    
+    if (vram_addr > 0x3fff) {
+        vram_addr -= 0x3fff;
     }
 }
 
@@ -137,6 +137,10 @@ bool PPU::get_green_flag() {
 
 bool PPU::get_blue_flag() {
     return (regs[1] >> 7) & 1;
+}
+
+bool PPU::is_rendering_enabled() {
+    return get_background_flag() || get_sprite_flag();
 }
 
 // PPUSTATUS
@@ -285,17 +289,6 @@ void PPU::set_oam(uint8_t byte) {
     }
 }
 
-void PPU::set_vram_addr(uint8_t value) {
-    //Setting the new vram address shifts left the lowest 8 bits and then adds a byte value.
-    if (!addr_latch) {
-        vram_addr = ((uint16_t) value << 8) + (vram_addr % 0xFF); 
-    } else {
-        vram_addr = ((vram_addr >> 8) << 8) + value;
-    }
-    
-    addr_latch = !addr_latch;
-}
-
 uint16_t PPU::get_vram_addr() {
     return vram_addr;
 }
@@ -359,128 +352,16 @@ void PPU::decrement_sprite_counter() {
     }
 }
 
-uint8_t PPU::get_sprite_pixel() {
-    //This function gets the next sprite pixel to be used for comparison with the background pixel when deciding the next pixel to display.
-    uint8_t return_pixel;
-    for (int i = 0; i < SPRITES_SEC; i++) {
-        uint8_t color = (sprite_bitmap_low[i] >> 7) + (sprite_bitmap_high[i] >> 7) * 2;
-        if (sprite_x[i] == 0) {
-            //Shifts sprite bitmaps
-            sprite_bitmap_low[i] = sprite_bitmap_low[i] << 1;
-            sprite_bitmap_high[i] = sprite_bitmap_high[i] << 1;	  
-            if (color != 0) {
-                //Sprite must be active and must have a non-transparent pixel
-          	  	return_pixel = memory->ppu_read(0x3F10 + 4 * (sprite_attributes[i] % 4) + color);
-	          	sprite_foreground = (((sprite_attributes[i] >> 5) & 0x1) == 1);
-                return return_pixel;
-	        }
-        }	   
-    }
-    
-}
-
-void PPU::fill_next_pixel() {
-    uint16_t prog = cycles % 341;
-    //This function fills in the next pixel in the grid.
-    uint8_t color = (background_bitmap_1 >> (8 + fine_x) & 0x1) << 1 + ((background_bitmap_1 >> fine_x) & 0x1);
-    uint8_t palette_attribute;
-    uint8_t coarse_x = get_coarse_x();
-    uint8_t coarse_y = get_coarse_y();
-
-    switch ((coarse_y * 2 + coarse_x) % 4) {
-        //This determines which quadrant the address is in, and selects the 2-bit appropriate attribute from the byte.
-        case 0: {
-            palette_attribute = palette_attribute_1 & 0x3;
-            break;
-        }
-        case 1: {
-            palette_attribute = (palette_attribute_1 >> 2) & 0x3;
-            break;
-        }
-        case 2: {
-            palette_attribute = (palette_attribute_1 >> 4) & 0x3;
-            break;
-        }
-        case 3: {
-            palette_attribute = (palette_attribute_1 >> 6) & 0x3;
-            break;
-        }
-    }
-	
-    uint8_t background_pixel = memory->ppu_read(0x3F00 + 4 * palette_attribute + color);
-    uint8_t sprite_pixel = get_sprite_pixel();	
-
-    //Determines whether sprite or background pixel is displayed	
-    if (sprite_foreground || background_pixel == 0) {
-        pixel_array[current_scanline][prog] = sprite_pixel;
-    } else {
-        pixel_array[current_scanline][prog] = background_pixel;
-    }
-
-    if (sprite_pixel != 0 && background_pixel != 0) {
-        //Sets sprite 0 hit flag to 1.
-        set_sprite_0_hit_flag(1);
-    }
-}
-
-void PPU::fill_sprite_bitmaps() {
-    //This function is responsible for filling the bitmaps for the sprites to be used on the next scanline.
-    
-    uint16_t prog = cycles % 341;
-    uint8_t fetch_prog = prog % 8;
-    
-    uint8_t fine_y = ((vram_addr >> 12) + 1) % 8;
-    uint8_t sprite_num = (prog - 257) % 257; 
-    bool ver_flip = (sprite_attribute_latch >> 7) == 1;
-    bool hor_flip = (sprite_attribute_latch >> 6) == 1;
-    uint8_t temp_bitmap;
-    //Left pattern table or right pattern table
-    uint8_t sprite_pattern_offset = ((regs[0] >> 3) & 1 == 1) ? 0x1000 : 0;
-
-    switch (fetch_prog) {
-        case 5: {
-			//Fetches low sprite bitmap
-			sprite_bitmap_low[sprite_num] = 0;
-			
-            //Fetches the vertical flipped bitmap if appropriate
-			if (ver_flip) {
-			    temp_bitmap = memory->ppu_read(sprite_pattern_offset + (sprite_tile_latch << 4) + 7 - fine_y);
-			} else {
-			    temp_bitmap = memory->ppu_read(sprite_pattern_offset + (sprite_tile_latch << 4) + fine_y);
-			}
-
-			if (hor_flip) {
-                //Flips the 8-bit quantity if appropriate
-			    for (int i = 0; i < 8; i++) {
-                    sprite_bitmap_low[sprite_num] += (temp_bitmap >> (7 - i)) << i;
-			    }
-			} else {
-			     sprite_bitmap_low[sprite_num] = temp_bitmap;
-			}
-			break;
-		}
-
-		case 7: {
-			//Fetches high sprite bitmap
-			sprite_bitmap_high[sprite_num] = 0;
-			if (ver_flip) {
-				temp_bitmap = memory->ppu_read(sprite_pattern_offset + (sprite_tile_latch << 4) + 7 - fine_y);
-			} else {
-				temp_bitmap = memory->ppu_read(sprite_pattern_offset + (sprite_tile_latch << 4) + fine_y);
-			}
-
-			if (hor_flip) {
-			    for (int i = 0; i < 8; i++) {
-					sprite_bitmap_high[sprite_num] += (temp_bitmap >> (7 - i)) << i;
-				}
-			} else {
-				sprite_bitmap_high[sprite_num] = temp_bitmap;
-			}
-		}
-	}
-}
-
 void PPU::scanl_bkg() {
+    bool bkg_render = get_background_flag();
+    bool spr_render = get_sprite_flag();
+    
+    bool render = is_rendering_enabled();
+    
+    if (!render) {
+        return;
+    }
+    
     uint16_t cycle = cycles % 341;
     
     if (cycle == 0) {
@@ -509,7 +390,6 @@ void PPU::scanl_bkg() {
                 uint16_t base_bkg_addr = get_background_pattern_table_addr();
                 uint8_t fine_y = get_fine_y();
                 bkg_addr = (((uint16_t) nametable_byte) << 4) + fine_y;
-                
                 low_pattern = memory->ppu_read(bkg_addr);
                 
                 break;
@@ -523,19 +403,16 @@ void PPU::scanl_bkg() {
                 break;
             }
             
-            // add data to pipeline
+            // add data to registers
             case 0: {
-                for (int i = 0; i < 8; i++) {
-                    uint8_t color_byte = ((low_pattern >> (7 - i)) & 0x1) + (((high_pattern >> (7 - i)) & 0x1) << 1);
-                    bool even_x = (get_coarse_x() / 16) % 2;
-                    bool even_y = (current_scanline / 16) % 2;
-                    uint8_t shift = (((uint8_t) even_x) + (((uint8_t) even_y) << 1)) << 1;
-                    uint8_t color_set = (attribute_byte >> shift) & 0x3;
-                    
-                    uint16_t color_addr = 0x3f00 + color_byte + (color_set << 2);
-                    uint8_t palette_color = memory->ppu_read(color_addr);
-                    
-                    pipeline.push(palette_color);
+                if (cycles == 328) {
+                    palette_attribute_1 = attribute_byte;
+                    high_shift >>= 8;
+                    low_shift >>= 8;
+                } else {
+                    palette_attribute_2 = attribute_byte;
+                    high_shift |= ((uint16_t) high_pattern) << 8;
+                    low_shift |= ((uint16_t) low_pattern) << 8;
                 }
                 
                 if (cycles != 256) inc_coarse_x();
@@ -552,10 +429,9 @@ void PPU::scanl_bkg() {
 void PPU::scanl_spr() {
     
     // if both renders are disabled, then skip
-    bool bkg_render = get_background_flag();
-    bool spr_render = get_sprite_flag();
+    bool render = is_rendering_enabled();
     
-    if (!(bkg_render || spr_render)) {
+    if (!render) {
         return;
     }
     
@@ -631,26 +507,62 @@ void PPU::render_pixel() {
     uint16_t cycle = cycles % 341;
     
     if (cycle > 0 && cycle < 257) {
-        if (pipeline.size() > 0) {
-            uint8_t pixel = pipeline.front();
-            pipeline.pop();
-            
-            pixel_array[current_scanline][cycle - 1] = pixel;
+        uint8_t background_pixel = get_background_pixel();
+        uint8_t sprite_pixel = get_sprite_pixel();
+                    
+        if (sprite_foreground || background_pixel == 0) {
+            pixel_array[current_scanline][cycle] = sprite_pixel;
+        } else {
+            pixel_array[current_scanline][cycle] = background_pixel;
         }
+        
+        low_shift >>= 1;
+        high_shift >>= 1;
     }
+}
+
+uint8_t PPU::get_background_pixel() {
+    uint8_t fx = (fine_x + cycles % 341) % 8;
+    uint8_t color_byte = ((low_shift >> fx) & 0x1) + (((high_shift >> fx) & 0x1) << 1);
+    bool even_x = (get_coarse_x() / 16) % 2;
+    bool even_y = (current_scanline / 16) % 2;
+    uint8_t shift = (((uint8_t) even_x) + (((uint8_t) even_y) << 1)) << 1;
+    uint8_t color_set = (attribute_byte >> shift) & 0x3;
+    
+    uint16_t color_addr = 0x3f00 + color_byte + (color_set << 2);
+    uint8_t palette_color = memory->ppu_read(color_addr);
+    
+    return palette_color;
+}
+
+uint8_t PPU::get_sprite_pixel() {
+    //This function gets the next sprite pixel to be used for comparison with the background pixel when deciding the next pixel to display.
+    uint8_t return_pixel;
+    for (int i = 0; i < SPRITES_SEC; i++) {
+        uint8_t color = (sprite_bitmap_low[i] >> 7) + (sprite_bitmap_high[i] >> 7) * 2;
+        if (sprite_x[i] == 0) {
+            //Shifts sprite bitmaps
+            sprite_bitmap_low[i] = sprite_bitmap_low[i] << 1;
+            sprite_bitmap_high[i] = sprite_bitmap_high[i] << 1;	  
+            if (color != 0) {
+                //Sprite must be active and must have a non-transparent pixel
+          	  	return_pixel = memory->ppu_read(0x3F10 + 4 * (sprite_attributes[i] % 4) + color);
+	          	sprite_foreground = (((sprite_attributes[i] >> 5) & 0x1) == 1);
+                return return_pixel;
+	        }
+        }	   
+    }   
 }
 
 void PPU::execute() {
     //Our main cycle execution function for PPU. Every time this is called, a cycle of PPU is executed.
-    
+    bool render = is_rendering_enabled();
     if (current_scanline >= 0 && current_scanline < 240) { 
-        bool bkg_render = get_background_flag();
-        bool spr_render = get_sprite_flag();
-    
-        if (bkg_render || spr_render) {
+        if (render) {
+            render_pixel();
+            decrement_sprite_counter();
             scanl_bkg();
             scanl_spr();
-            render_pixel();
         }
         
     } else if (current_scanline == 261) {
@@ -660,7 +572,17 @@ void PPU::execute() {
             set_sprite_0_hit_flag(0);
             set_overflow_flag(0);
         }
-        scanl_bkg();
+        
+        
+        if (render) {
+            scanl_bkg();
+        }
+        
+        if (cycles > 279 && cycles < 305 && render) {
+            // set vertical bits
+            vram_addr &= ~0x7be0; 
+            vram_addr |= temp_vram_addr & 0x7be0; 
+        }
         
         if (cycles % 341 == 340) {
             display();
@@ -729,4 +651,145 @@ std::string PPU::debug() {
     buffer << "PPU: " << std::setw(3) << cycles % 341 << ", " << std::setw(3) << current_scanline;
     
     return buffer.str();
+}
+
+// render nametable
+void PPU::kmsv1() {
+    SDL_Window* nt_window = SDL_CreateWindow("NAMETABLE", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
+    if (nt_window == NULL) {
+        throw std::runtime_error(SDL_GetError());
+    }
+    
+    SDL_Renderer* nt_draw = SDL_CreateRenderer(nt_window, -1, 0);
+    SDL_Texture* nt_screen = SDL_CreateTexture(nt_draw, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, WIDTH, HEIGHT);
+    uint32_t* pixels = new uint32_t[WIDTH * HEIGHT];
+    
+    std::array<uint8_t, NAMETABLE> nametable = memory->get_nametable(0);
+    
+    std::array<uint8_t, PATTERN_TABLE> left = memory->get_pattern_table(0);
+    std::array<uint8_t, PATTERN_TABLE> right = memory->get_pattern_table(0);
+    
+    std::array<std::array<uint8_t, PALETTE>, 4> palettes = memory->get_back_palettes();
+    
+    uint8_t univ_color = memory->get_univ_back_color();
+    
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
+            uint16_t nt_index = (x + y * WIDTH) / 8;
+            uint8_t nt_byte = nametable[nt_index];
+            
+            uint8_t attr_y_offset = y / 32;
+            uint8_t attr_x_offset = x / 32;
+            
+            uint8_t attr_byte = nametable[960 + attr_x_offset + attr_y_offset * 8];
+            
+            bool even_x = (x / 16) % 2;
+            bool even_y = (y / 16) % 2;
+            uint8_t shift = (((uint8_t) even_x) + (((uint8_t) even_y) << 1)) << 1;
+            
+            uint8_t color_set = (attr_byte >> shift) & 0x3;
+            
+            uint8_t pt_index = (((uint16_t) nt_byte) << 4 + y % 8);
+            uint8_t low_byte;
+            uint8_t high_byte;
+            
+            if (pt_index < 0x1000) {
+                low_byte = left[pt_index];
+                high_byte = left[pt_index + 8];
+            } else {
+                low_byte = right[pt_index];
+                high_byte = right[pt_index + 8];
+            }
+            
+            uint8_t color_index = ((low_byte >> (7 - x % 8)) & 1) + (((high_byte >> (7 - x % 8)) & 1) << 1);
+            
+            uint8_t color_8;
+            
+            if (color_index == 0) {
+                color_8 = univ_color;
+            } else {
+                color_8 = palettes[color_set][color_index - 1];
+            }
+            
+            uint32_t color_32 = convert32(color_8);
+            pixels[ADDR(x,y)] = color_32;
+        }
+    }
+    
+    SDL_UpdateTexture(nt_screen, NULL, pixels, WIDTH * sizeof(uint32_t));
+    
+    SDL_RenderClear(nt_draw);
+    SDL_RenderCopy(nt_draw, nt_screen, NULL, NULL);
+    SDL_RenderPresent(nt_draw);
+}
+
+// render pattern table
+void PPU::kmsv2() {
+    SDL_Window* pt_window = SDL_CreateWindow("PATTERN TABLE", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
+    if (pt_window == NULL) {
+        throw std::runtime_error(SDL_GetError());
+    }
+    
+    SDL_Renderer* pt_draw = SDL_CreateRenderer(pt_window, -1, 0);
+    SDL_Texture* pt_screen = SDL_CreateTexture(pt_draw, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, WIDTH, HEIGHT);
+    uint32_t* pixels = new uint32_t[WIDTH * HEIGHT];
+    
+    std::array<uint8_t, PATTERN_TABLE> left = memory->get_pattern_table(0);
+    std::array<uint8_t, PATTERN_TABLE> right = memory->get_pattern_table(0);
+    
+    std::array<std::array<uint8_t, PALETTE>, 4> palettes = memory->get_back_palettes();
+    uint8_t univ_color = memory->get_univ_back_color();
+    
+    for (int y = 0; y < 16; y++) {
+        
+        for (int x = 0; x < 16; x++) {
+            uint16_t tile_index = (y << 8) + (x << 4);
+            
+            for (int fy = 0; fy < 8; fy++) {
+                uint16_t actual_index = tile_index + fy;
+                
+                uint8_t left_low = left[actual_index];
+                uint8_t left_high = left[actual_index + 8];
+                
+                uint8_t right_low = right[actual_index];
+                uint8_t right_high = right[actual_index + 8];
+                
+                for (int fx = 0; fx < 8; fx++) {
+                    // draw left
+                    uint8_t left_color_index = ((left_low >> (7 - fx)) & 1) + (((left_high >> (7 - fx)) & 1) << 1);
+                    uint8_t left_color_8;
+            
+                    if (left_color_index == 0) {
+                        left_color_8 = univ_color;
+                    } else {
+                        left_color_8 = palettes[0][left_color_index - 1];
+                    }
+                    
+                    uint32_t left_color_32 = convert32(left_color_8);
+                    
+                    // draw right
+                    uint8_t right_color_index = ((right_low >> (7 - fx)) & 1) + (((right_high >> (7 - fx)) & 1) << 1);
+                    uint8_t right_color_8;
+            
+                    if (right_color_index == 0) {
+                        right_color_8 = univ_color;
+                    } else {
+                        right_color_8 = palettes[0][right_color_index - 1];
+                    }
+                    
+                    uint32_t right_color_32 = convert32(right_color_8);
+                    
+                    // put
+                    pixels[(y * 8 + fy) * WIDTH + x * 16 + fx] = left_color_32;
+                    pixels[(y * 8 + fy) * WIDTH + x * 16 + fx + 128] = right_color_32;
+                }
+            }
+        }
+    }
+    
+    SDL_UpdateTexture(pt_screen, NULL, pixels, WIDTH * sizeof(uint32_t));
+    
+    SDL_RenderClear(pt_draw);
+    SDL_RenderCopy(pt_draw, pt_screen, NULL, NULL);
+    SDL_RenderPresent(pt_draw);
 }

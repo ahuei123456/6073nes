@@ -65,7 +65,7 @@ private:
     uint16_t temp_vram_addr;
     uint8_t fine_x;
     uint8_t write_toggle;
-    uint16_t background_bitmap_1, background_bitmap_2;
+    uint16_t high_shift, low_shift;
     uint8_t palette_attribute_1, palette_attribute_2;
     
     // sprites
@@ -76,7 +76,6 @@ private:
     std::array<uint8_t, SPRITES_SEC> sprite_attributes;
     std::array<uint8_t, SPRITES_SEC> sprite_x;
     void decrement_sprite_counter();
-    uint8_t get_sprite_pixel();
 
     // Determines whether x or y coordinate is set next. If false, x-coordinate. If true, y-coordinate.
     bool addr_latch = false;
@@ -120,6 +119,7 @@ private:
     bool get_red_flag();
     bool get_green_flag();
     bool get_blue_flag();
+    bool is_rendering_enabled();
     
     // PPUSTATUS
     void set_overflow_flag(bool value);
@@ -135,7 +135,6 @@ private:
     uint8_t get_fine_y();
     
     // rendering
-    std::queue<uint8_t> pipeline;
     uint16_t bkg_addr;
     uint8_t low_pattern;
     uint8_t high_pattern;
@@ -153,14 +152,10 @@ private:
     void scanl_bkg();
     void scanl_spr();
     void render_pixel();
+    uint8_t get_sprite_pixel();
+    uint8_t get_background_pixel();
     
     void inc_fine_x();
-    void fill_next_pixel();
-    void fill_sprite_bitmaps();
-    void scan();
-    void scan_261();	
-    void background_eval();
-    void sprite_eval();
     
     // SDL
     SDL_Window* window;
@@ -177,13 +172,14 @@ public:
     PPU(std::shared_ptr<Mem> memory, SDL_Window* window);
     ~PPU();
     void set_oam(uint8_t byte);
-    void set_vram_addr(uint8_t value);
     uint16_t get_vram_addr();
     void ext_reg_write(uint64_t index, uint8_t value);
     uint8_t ext_reg_read(uint64_t index);
 
     void execute();
     void display();
+    void kmsv1();
+    void kmsv2();
     
     std::string debug();
 };

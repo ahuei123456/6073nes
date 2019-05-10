@@ -138,6 +138,7 @@ void NES::poll_input() {
                  if (!kstate[NES_START]) {
                      std::cout << "press start" << std::endl;
                      memory->button_press(NES_START);
+                     ppu->kmsv1();
                      kstate[NES_START] = true;
                  }
                  break;
@@ -146,6 +147,7 @@ void NES::poll_input() {
                  if (!kstate[NES_SELECT]) {
                      std::cout << "press select" << std::endl;
                      memory->button_press(NES_SELECT);
+                     ppu->kmsv2();
                      kstate[NES_SELECT] = true;
                  }
                  break;

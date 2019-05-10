@@ -20,9 +20,11 @@ Mem::Mem(std::shared_ptr<ROM> game) {
         uint64_t chr_size = game->get_chr_size();
         
         for (int i = 0; i < PATTERN_TABLE; i++) {
-            left[i] = game->get_prg(i);
-            right[i] = game->get_prg(i + PATTERN_TABLE);
+            left[i] = game->get_chr(i);
+            right[i] = game->get_chr(i + PATTERN_TABLE);
         }
+        
+        std::cout << "PRG:" << prg_size << " " << "CHR:" << chr_size << std::endl;
     }
     
     strobe = true;
@@ -219,6 +221,31 @@ uint8_t Mem::ppu_write(uint64_t index, uint8_t value) {
             }
         }
     }
+}
+
+std::array<uint8_t, NAMETABLE> Mem::get_nametable(uint8_t index) {
+    if (index > NAMETABLE) {
+        throw std::out_of_range("Tried to retrieve invalid nametable!");
+    }
+    
+    return nametables[index];
+}
+
+std::array<uint8_t, PATTERN_TABLE> Mem::get_pattern_table(uint8_t index) {
+    if (index > 1) {
+        throw std::out_of_range("Tried to retrieve pattern table!");
+    }
+    
+    if (index) return right;
+    else return left;
+}
+
+std::array<std::array<uint8_t, PALETTE>, 4> Mem::get_back_palettes() {
+    return back_palettes;
+}
+
+uint8_t Mem::get_univ_back_color() {
+    return univ_back_color;
 }
 
 uint64_t Mem::get_cpu_cycle() {

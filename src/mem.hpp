@@ -120,6 +120,11 @@ public:
     void set_nmi(bool nmi);
     uint64_t get_cpu_cycle();
     
+    std::array<uint8_t, NAMETABLE> get_nametable(uint8_t index);
+    std::array<uint8_t, PATTERN_TABLE> get_pattern_table(uint8_t index);
+    std::array<std::array<uint8_t, PALETTE>, 4> get_back_palettes();
+    uint8_t get_univ_back_color();
+    
     // input
     void button_press(uint8_t button);
     void button_release(uint8_t button);
