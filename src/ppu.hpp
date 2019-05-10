@@ -7,6 +7,7 @@
 #include <exception>
 #include <memory>
 #include <queue>
+#include <string>
 #include <SDL.h>
 #include "mem.hpp"
 
@@ -87,7 +88,7 @@ private:
 
     // timing
     uint64_t cycles = 0;
-    uint16_t current_scanline = 261;
+    uint16_t current_scanline = 0;
     
     // latches
     uint8_t nametable_byte;
@@ -168,6 +169,9 @@ private:
     uint32_t* get_pixel_array();
     uint32_t convert32(uint8_t value);
     
+    // startup
+    void clear_writes();
+    
 public:
     PPU(std::shared_ptr<Mem> memory, SDL_Window* window);
     ~PPU();
@@ -179,6 +183,8 @@ public:
 
     void execute();
     void display();
+    
+    std::string debug();
 };
 
 #endif

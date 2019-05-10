@@ -98,7 +98,7 @@ bool PPU::get_vblank_nmi_flag() {
 // PPUMASK
 
 bool PPU::get_greyscale() {
-    return regs[0] & 1;
+    return regs[1] & 1;
 }
 
 bool PPU::get_background_left_flag() {
@@ -106,27 +106,27 @@ bool PPU::get_background_left_flag() {
 }
 
 bool PPU::get_sprite_left_flag() {
-    return (regs[2] >> 2) & 1;
+    return (regs[1] >> 2) & 1;
 }
 
 bool PPU::get_background_flag() {
-    return (regs[3] >> 3) & 1;
+    return (regs[1] >> 3) & 1;
 }
 
 bool PPU::get_sprite_flag() {
-    return (regs[4] >> 4) & 1;
+    return (regs[1] >> 4) & 1;
 }
 
 bool PPU::get_red_flag() {
-    return (regs[5] >> 5) & 1;
+    return (regs[1] >> 5) & 1;
 }
 
 bool PPU::get_green_flag() {
-    return (regs[6] >> 6) & 1;
+    return (regs[1] >> 6) & 1;
 }
 
 bool PPU::get_blue_flag() {
-    return (regs[7] >> 7) & 1;
+    return (regs[1] >> 7) & 1;
 }
 
 // PPUSTATUS
@@ -245,7 +245,13 @@ void PPU::ext_reg_write(uint64_t index, uint8_t value) {
 }
 
 uint8_t PPU::ext_reg_read(uint64_t index) {
-    return regs[index];
+    uint8_t value = regs[index];
+    switch (index) {
+        case 2: {
+            regs[index] &= 0x7f;
+        }
+    }
+    return value;
 }
 
 void PPU::set_oam(uint8_t byte) {
@@ -526,6 +532,15 @@ void PPU::scanl_bkg() {
 }
 
 void PPU::scanl_spr() {
+    
+    // if both renders are disabled, then skip
+    bool bkg_render = get_background_flag();
+    bool spr_render = get_sprite_flag();
+    
+    if (!(bkg_render || spr_render)) {
+        return;
+    }
+    
     uint16_t cycle = cycles % 341;
     
     if (cycle > 0 && cycle < 65) {
@@ -611,9 +626,15 @@ void PPU::execute() {
     //Our main cycle execution function for PPU. Every time this is called, a cycle of PPU is executed.
     
     if (current_scanline >= 0 && current_scanline < 240) { 
-    	 scanl_bkg();
-         scanl_spr();
-         render_pixel();
+        bool bkg_render = get_background_flag();
+        bool spr_render = get_sprite_flag();
+    
+        if (bkg_render || spr_render) {
+            scanl_bkg();
+            scanl_spr();
+            render_pixel();
+        }
+        
     } else if (current_scanline == 261) {
         //Pre-render scanline fills the 2 16-bit background tile registers and sets VBLANK and sprite 0 hit flags and sprite overflow flags to 0.
         if (cycles % 341 == 1) {
@@ -633,7 +654,24 @@ void PPU::execute() {
             set_vblank_flag(1);
     }
     
+    
     inc_cycle();
+    
+    uint64_t cpu_clock = memory->get_cpu_cycle();
+    
+    if (cpu_clock < 29659) {
+        clear_writes();
+    }        
+}
+
+void PPU::clear_writes() {
+    regs[0] = 0;
+    regs[1] = 0;
+    regs[5] = 0;
+    regs[6] = 0;
+    regs[7] = 0;
+    temp_vram_addr = 0;
+    fine_x = 0;
 }
 
 void PPU::display() {
@@ -665,4 +703,12 @@ uint32_t PPU::convert32(uint8_t value) {
     color >>= 8;
     color += 0xFF000000;
     return color;
+}
+
+std::string PPU::debug() {
+    std::stringstream buffer;
+    
+    buffer << "PPU: " << std::setw(3) << cycles % 341 << ", " << std::setw(3) << current_scanline;
+    
+    return buffer.str();
 }

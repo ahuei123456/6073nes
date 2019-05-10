@@ -221,6 +221,10 @@ uint8_t Mem::ppu_write(uint64_t index, uint8_t value) {
     }
 }
 
+uint64_t Mem::get_cpu_cycle() {
+    return cpu->get_cycle();
+}
+
 void Mem::set_nmi(bool nmi) {
     flag_nmi = nmi;
 }

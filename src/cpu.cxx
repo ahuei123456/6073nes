@@ -1,13 +1,63 @@
 #include "cpu.hpp"
 #define DEBUG 1
 
+void Inst::add_operand(uint8_t operand) {
+    if (operand != opcode){
+        operands.push_back(operand);
+    }
+}
+
+std::string Inst::str() {
+    std::stringstream buffer;
+    
+    buffer << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << unsigned(reg_pc) << " ";
+    
+    buffer << "Opcode: " << std::setw(2) << std::hex << unsigned(operands[0]) << " ";
+    buffer << "Operands: ";
+    
+    uint8_t counter = 0;
+    for (auto i: operands) {
+        if (i != opcode) {
+            counter++;
+            buffer << std::setw(2) << std::hex << std::uppercase << unsigned(i) << " ";
+        }
+    }
+    
+    if (counter == 0) buffer << "      ";
+    else if (counter == 1) buffer << "   ";
+    buffer << "              ";
+    
+    buffer << "A: " << std::setw(2) << std::hex << unsigned(reg_ac) << " ";
+    buffer << "X: " << std::setw(2) << std::hex << unsigned(reg_x) << " ";
+    buffer << "Y: " << std::setw(2) << std::hex << unsigned(reg_y) << " ";
+    buffer << "P: " << std::setw(2) << std::hex << unsigned(reg_p) << " ";
+    buffer << "S: " << std::setw(2) << std::hex << unsigned(reg_s) << " ";
+    buffer << "CYC: " << std::dec << unsigned(total_cycles) << " ";
+    
+    return buffer.str();
+}
+
 CPU::CPU(std::shared_ptr<Mem> memory) {
     this->memory = memory;
     total_cycles = 7;
+    reg_ac = 0;
+    reg_x = 0;
+    reg_y = 0;
     reg_s = 0xFD;
     reg_p = 0x24;
     reg_pc = memory->reset_vector();
     //::cout << std::hex << unsigned(reg_pc) << std::endl;
+}
+
+void CPU::set_debug() {
+    inst.reg_pc = reg_pc;
+    inst.reg_ac = reg_ac;
+    inst.reg_x = reg_x;
+    inst.reg_y = reg_y;
+    inst.reg_p = reg_p;
+    inst.reg_s = reg_s;
+    inst.total_cycles = total_cycles;
+    inst.operands.clear();
 }
 
 uint16_t CPU::execute() {
@@ -17,14 +67,7 @@ uint16_t CPU::execute() {
         cycles = 0;
     }
     
-    if (DEBUG) {
-        std::cout << std::setfill('0') << std::setw(4) << std::hex << unsigned(reg_pc) << " ";
-        std::cout << "A: " << std::setw(2) << std::hex << unsigned(reg_ac) << " ";
-        std::cout << "X: " << std::setw(2) << std::hex << unsigned(reg_x) << " ";
-        std::cout << "Y: " << std::setw(2) << std::hex << unsigned(reg_y) << " ";
-        std::cout << "P: " << std::setw(2) << std::hex << unsigned(reg_p) << " ";
-        std::cout << "SP: " << std::setw(2) << std::hex << unsigned(reg_s) << " ";
-    }
+    set_debug();
     
     if (memory->read_nmi()) {
         std::cout << "nmi" << std::endl;
@@ -37,6 +80,8 @@ uint16_t CPU::execute() {
     }
     
     uint8_t opcode = pc_read();
+    
+    inst.opcode = opcode;
     
     switch (opcode) {
         case LDA_I: {
@@ -851,9 +896,6 @@ uint16_t CPU::execute() {
     if((reg_p & 32) >> 5 == 0) {
         //exit(0);
     }
-    if (DEBUG) {
-        std::cout << "cycles: " << std::dec << unsigned(total_cycles) << std::endl;
-    }
     total_cycles += cycles;
     return cycles;
 }
@@ -1175,9 +1217,9 @@ void CPU::mem_write(uint64_t index, uint8_t value) {
 uint8_t CPU::pc_read() {
     uint8_t data = mem_read(reg_pc);
     reg_pc++;
-    if (DEBUG) {
-        std::cout << std::hex << unsigned(data) << " ";
-    }
+    
+    inst.add_operand(data);
+    
     return data;
 }
 
@@ -1254,4 +1296,12 @@ uint16_t CPU::get_pc() {
 
 uint8_t CPU::get_s() {
     return reg_s;
+}
+
+uint64_t CPU::get_cycle() {
+    return total_cycles;
+}
+
+std::string CPU::get_inst() {
+    return inst.str();
 }

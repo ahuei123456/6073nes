@@ -118,6 +118,7 @@ public:
     uint8_t ppu_reg_read(uint64_t index);
     void ppu_reg_write(uint64_t index, uint8_t value);
     void set_nmi(bool nmi);
+    uint64_t get_cpu_cycle();
     
     // input
     void button_press(uint8_t button);
