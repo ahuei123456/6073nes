@@ -55,12 +55,10 @@ void NES::ppu_run() {
 }
 
 void NES::execute() {
+    //if (run_t < 1) exit(0);
     poll_input();
     
-    if (cycles_until_ppu <= 0) {
-        ppu->execute();
-        cycles_until_ppu += 3;
-    } 
+    
     
     passed = cpu->execute();
     if (passed == ERROR) {
@@ -68,9 +66,12 @@ void NES::execute() {
         running = false;
     } else {
         cycles += passed;
-        cycles_until_ppu -= passed;
+        for (int i = 0; i < passed; i++) {
+            ppu->execute();
+        }
     }
     
+    run_t--;
 }
 
 void NES::poll_input() {

@@ -43,6 +43,7 @@ private:
     bool kstate[8];
     
     bool running;
+    uint64_t run_t = 10000;
     
     void poll_input();
     

@@ -1,4 +1,5 @@
 #include "cpu.hpp"
+#define DEBUG 1
 
 CPU::CPU(std::shared_ptr<Mem> memory) {
     this->memory = memory;
@@ -6,9 +7,6 @@ CPU::CPU(std::shared_ptr<Mem> memory) {
     reg_s = 0xFD;
     reg_p = 0x24;
     reg_pc = memory->reset_vector();
-    if (DEBUG) {
-        reg_pc = 0xc000;
-    }
     //::cout << std::hex << unsigned(reg_pc) << std::endl;
 }
 

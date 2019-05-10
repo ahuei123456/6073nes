@@ -41,7 +41,6 @@
 #define JOYSTICK_1      0x4016
 #define JOYSTICK_2      0x4017
 
-
 // ppu stuff
 
 #define PATTERN_TABLE   0x1000
@@ -123,6 +122,9 @@ public:
     // input
     void button_press(uint8_t button);
     void button_release(uint8_t button);
+    
+    // color
+    uint32_t convert32(uint8_t value);
 };
 
 #endif
