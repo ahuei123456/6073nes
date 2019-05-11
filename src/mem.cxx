@@ -110,9 +110,8 @@ uint8_t Mem::ppu_reg_read(uint64_t index) {
     
     index = ACTUAL_PPU_REGISTER(index);
     
-    if (PPU_REGISTER_READABLE(index)) {
-        uint8_t r_val = ppu->ext_reg_read(index % 8);
-    }
+    uint8_t r_val = ppu->ext_reg_read(index % 8);
+    return r_val;
 }
 
 // remember to actually write to the PPU
@@ -124,7 +123,6 @@ void Mem::ppu_reg_write(uint64_t index, uint8_t value) {
     
     index = ACTUAL_PPU_REGISTER(index);
     
-    ppu_latch = value;
     if (PPU_REGISTER_WRITABLE(index)) {
     	ppu->ext_reg_write(index % 8, value);
     }

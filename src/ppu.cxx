@@ -98,6 +98,8 @@ bool PPU::get_vblank_nmi_flag() {
 void PPU::vram_increment() {
     uint8_t inc = get_vram_increment();
     
+    std::cout << unsigned(inc) << std::endl;
+    
     vram_addr += inc;
     
     if (vram_addr > 0x3fff) {
@@ -248,8 +250,10 @@ void PPU::ext_reg_write(uint64_t index, uint8_t value) {
             break;
         }
         case 7: {
-            memory->ppu_write(vram_addr, value);
-            vram_increment();
+            if (get_vblank_nmi_flag() || !is_rendering_enabled()) {
+                memory->ppu_write(vram_addr, value);
+                vram_increment();
+            }
             break;
         }
     }
@@ -257,7 +261,6 @@ void PPU::ext_reg_write(uint64_t index, uint8_t value) {
     regs[2] &= ~0x1f;
     regs[2] |= (value & 0x1f);
     regs[index] = value;
-    
 }
 
 uint8_t PPU::ext_reg_read(uint64_t index) {
@@ -268,8 +271,20 @@ uint8_t PPU::ext_reg_read(uint64_t index) {
             break;
         }
         case 7: {
-            value = memory->ppu_read(vram_addr);
-            vram_increment();
+            if (get_vblank_nmi_flag() || !is_rendering_enabled()) {
+                if (vram_addr > 0x3eff) {
+                    value = memory->ppu_read(vram_addr);
+                    vram_increment();
+                } else {
+                    regs[index] = memory->ppu_read(vram_addr);
+                    vram_increment();
+                }
+                
+            }
+            break;
+        }
+        default: {
+            value = reg_latch;
             break;
         }
     }
@@ -735,7 +750,7 @@ void PPU::kmsv2() {
     uint32_t* pixels = new uint32_t[WIDTH * HEIGHT];
     
     std::array<uint8_t, PATTERN_TABLE> left = memory->get_pattern_table(0);
-    std::array<uint8_t, PATTERN_TABLE> right = memory->get_pattern_table(0);
+    std::array<uint8_t, PATTERN_TABLE> right = memory->get_pattern_table(1);
     
     std::array<std::array<uint8_t, PALETTE>, 4> palettes = memory->get_back_palettes();
     uint8_t univ_color = memory->get_univ_back_color();
@@ -780,8 +795,8 @@ void PPU::kmsv2() {
                     uint32_t right_color_32 = convert32(right_color_8);
                     
                     // put
-                    pixels[(y * 8 + fy) * WIDTH + x * 16 + fx] = left_color_32;
-                    pixels[(y * 8 + fy) * WIDTH + x * 16 + fx + 128] = right_color_32;
+                    pixels[(y * 8 + fy) * WIDTH + x * 8 + fx] = left_color_32;
+                    pixels[(y * 8 + fy) * WIDTH + x * 8 + fx + 128] = right_color_32;
                 }
             }
         }

@@ -50,6 +50,7 @@ private:
     std::shared_ptr<Mem> memory;
     // PPU registers
     std::array<uint8_t, REGS> regs;
+    uint8_t reg_latch;
     // OAM memory
     
     uint8_t read_buffer;
