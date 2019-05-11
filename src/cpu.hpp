@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <vector>
 #include <memory>
+#include <string>
 
 #include "mem.hpp"
 
@@ -229,9 +230,30 @@
 
 class Mem;
 
+struct Inst {
+    uint16_t reg_pc;
+    uint8_t opcode;
+    std::vector<uint8_t> operands;
+    uint8_t reg_ac;
+    uint8_t reg_x;
+    uint8_t reg_y;
+    uint8_t reg_p;
+    uint8_t reg_s;
+    uint8_t cycles;
+    uint64_t total_cycles;
+    
+    void add_operand(uint8_t operand);
+    std::string str();
+};
+
 class CPU {
 private:
     std::shared_ptr<Mem> memory;
+    
+    // debug
+    Inst inst;
+    
+    void set_debug();
     
     // register info
     // https://wiki.nesdev.com/w/index.php/CPU_registers
@@ -329,10 +351,6 @@ private:
     uint8_t pop();
     uint16_t pop16();
     
-public:
-    CPU(std::shared_ptr<Mem> memory);
-    uint16_t execute();
-    
     uint8_t get_ac();
     uint8_t get_x();
     uint8_t get_y();
@@ -346,6 +364,13 @@ public:
     bool get_interrupt();
     bool get_zero();
     bool get_carry();
+    
+public:
+    CPU(std::shared_ptr<Mem> memory);
+    uint16_t execute();
+    
+    uint64_t get_cycle();
+    std::string get_inst();
 };
 
 #endif
